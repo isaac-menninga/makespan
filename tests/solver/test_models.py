@@ -8,8 +8,18 @@ def test_valid_problem_parses():
     problem = ProblemSpec(
         machines=["M1", "M2"],
         jobs=[
-            Job(operations=[Operation(machine_id="M1", duration=3), Operation(machine_id="M2", duration=2)]),
-            Job(operations=[Operation(machine_id="M2", duration=4), Operation(machine_id="M1", duration=1)]),
+            Job(
+                operations=[
+                    Operation(machine_id="M1", duration=3),
+                    Operation(machine_id="M2", duration=2),
+                ]
+            ),
+            Job(
+                operations=[
+                    Operation(machine_id="M2", duration=4),
+                    Operation(machine_id="M1", duration=1),
+                ]
+            ),
         ],
     )
     assert len(problem.jobs) == 2

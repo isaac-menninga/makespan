@@ -9,8 +9,18 @@ def _two_job_problem() -> ProblemSpec:
     return ProblemSpec(
         machines=["M1", "M2"],
         jobs=[
-            Job(operations=[Operation(machine_id="M1", duration=3), Operation(machine_id="M2", duration=2)]),
-            Job(operations=[Operation(machine_id="M2", duration=4), Operation(machine_id="M1", duration=1)]),
+            Job(
+                operations=[
+                    Operation(machine_id="M1", duration=3),
+                    Operation(machine_id="M2", duration=2),
+                ]
+            ),
+            Job(
+                operations=[
+                    Operation(machine_id="M2", duration=4),
+                    Operation(machine_id="M1", duration=1),
+                ]
+            ),
         ],
     )
 

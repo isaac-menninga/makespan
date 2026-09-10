@@ -109,6 +109,36 @@ def test_create_problem_rejects_duplicate_due_date_job_index(client):
     assert response.status_code == 422
 
 
+def test_list_solves_for_problem(client):
+    problem_payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 1}]}],
+    }
+    problem = client.post("/api/problems", json=problem_payload).json()
+
+    create_response = client.post(
+        "/api/solves", json={"problem_id": problem["id"], "time_limit_seconds": 5}
+    )
+    assert create_response.status_code == 202
+    solve_id = create_response.json()["id"]
+
+    response = client.get(f"/api/problems/{problem['id']}/solves")
+    assert response.status_code == 200
+    solves = response.json()
+    assert len(solves) == 1
+    entry = solves[0]
+    assert entry["id"] == solve_id
+    assert entry["status"] in ("pending", "running", "completed", "failed")
+    assert "best_objective" in entry
+    assert "objective_mode" in entry
+    assert "created_at" in entry
+
+
+def test_list_solves_for_unknown_problem_returns_404(client):
+    response = client.get("/api/problems/does-not-exist/solves")
+    assert response.status_code == 404
+
 
 def test_list_problems(client):
     client.post(
