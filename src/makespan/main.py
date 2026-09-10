@@ -3,6 +3,7 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 
+from makespan.api.problems import router as problems_router
 from makespan.db.session import init_db
 
 
@@ -13,6 +14,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Makespan", lifespan=lifespan)
+
+app.include_router(problems_router)
 
 
 @app.get("/api/health")

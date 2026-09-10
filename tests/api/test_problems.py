@@ -1,0 +1,66 @@
+def test_create_and_get_problem(client):
+    payload = {
+        "name": "Demo",
+        "machines": ["M1", "M2"],
+        "jobs": [
+            {
+                "operations": [
+                    {"machine_id": "M1", "duration": 3},
+                    {"machine_id": "M2", "duration": 2},
+                ]
+            },
+        ],
+    }
+    create_response = client.post("/api/problems", json=payload)
+    assert create_response.status_code == 201
+    created = create_response.json()
+    assert created["name"] == "Demo"
+    assert "id" in created
+
+    get_response = client.get(f"/api/problems/{created['id']}")
+    assert get_response.status_code == 200
+    assert get_response.json()["machines"] == ["M1", "M2"]
+
+
+def test_create_problem_rejects_unknown_machine_reference(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M2", "duration": 3}]}],
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+def test_update_problem(client):
+    payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 3}]}],
+    }
+    created = client.post("/api/problems", json=payload).json()
+
+    updated_payload = {**payload, "name": "Renamed"}
+    response = client.put(f"/api/problems/{created['id']}", json=updated_payload)
+    assert response.status_code == 200
+    assert response.json()["name"] == "Renamed"
+
+
+def test_get_unknown_problem_returns_404(client):
+    response = client.get("/api/problems/does-not-exist")
+    assert response.status_code == 404
+
+
+def test_list_problems(client):
+    client.post(
+        "/api/problems",
+        json={
+            "name": "A",
+            "machines": ["M1"],
+            "jobs": [{"operations": [{"machine_id": "M1", "duration": 1}]}],
+        },
+    )
+    response = client.get("/api/problems")
+    assert response.status_code == 200
+    names = [p["name"] for p in response.json()]
+    assert "A" in names
