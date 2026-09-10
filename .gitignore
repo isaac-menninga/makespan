@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# uv
+.python-version
+
+# Environment/secrets
+.env
+.env.local
+
+# OS/editor
+.DS_Store
+.vscode/
+*.swp
+
+# Solver output
+*.log
+output/
