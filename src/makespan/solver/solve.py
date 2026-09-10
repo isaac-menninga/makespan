@@ -1,9 +1,16 @@
+from typing import Callable, Optional
+
 from ortools.sat.python import cp_model
 
 from makespan.solver.models import ProblemSpec, Schedule, ScheduledOperation, SolveOutcome
+from makespan.solver.progress import ProgressCallback, ProgressSample
 
 
-def solve(problem: ProblemSpec, time_limit_seconds: int = 30) -> SolveOutcome:
+def solve(
+    problem: ProblemSpec,
+    time_limit_seconds: int = 30,
+    on_progress: Optional[Callable[[ProgressSample], None]] = None,
+) -> SolveOutcome:
     model = cp_model.CpModel()
 
     horizon = sum(op.duration for job in problem.jobs for op in job.operations)
@@ -36,7 +43,8 @@ def solve(problem: ProblemSpec, time_limit_seconds: int = 30) -> SolveOutcome:
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
-    status = solver.Solve(model)
+    callback = ProgressCallback(on_progress)
+    status = solver.Solve(model, callback)
 
     return _outcome_from_solve(status, solver, starts, ends, problem)
 
