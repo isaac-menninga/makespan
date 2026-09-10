@@ -49,7 +49,13 @@ def solve(
     ]
     makespan = model.NewIntVar(0, horizon, "makespan")
     model.AddMaxEquality(makespan, job_completion)
-    model.Minimize(makespan)
+
+    objective_terms = [makespan]
+    for due_date in problem.constraints.due_dates:
+        tardiness = model.NewIntVar(0, horizon, f"tardiness_{due_date.job_index}")
+        model.Add(tardiness >= job_completion[due_date.job_index] - due_date.due)
+        objective_terms.append(due_date.weight * tardiness)
+    model.Minimize(sum(objective_terms))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
