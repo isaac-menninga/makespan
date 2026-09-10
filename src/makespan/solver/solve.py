@@ -17,6 +17,9 @@ def solve(
     total_op_count = sum(len(job.operations) for job in problem.jobs)
     total_setup = sum(problem.constraints.setup_times.values()) * total_op_count
     horizon = total_duration + total_setup
+    for downtime in problem.constraints.downtime_windows:
+        horizon = max(horizon, downtime.end + total_duration + total_setup)
+    horizon += 1
 
     starts: dict[tuple[int, int], cp_model.IntVar] = {}
     ends: dict[tuple[int, int], cp_model.IntVar] = {}
@@ -40,6 +43,12 @@ def solve(
 
             if op_index > 0:
                 model.Add(start >= ends[(job_index, op_index - 1)])
+
+    for downtime_index, downtime in enumerate(problem.constraints.downtime_windows):
+        downtime_interval = model.NewIntervalVar(
+            downtime.start, downtime.end - downtime.start, downtime.end, f"downtime_{downtime_index}"
+        )
+        machine_intervals[downtime.machine_id].append(downtime_interval)
 
     for intervals in machine_intervals.values():
         model.AddNoOverlap(intervals)
