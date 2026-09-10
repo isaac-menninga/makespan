@@ -54,9 +54,15 @@ def solve(
             starts[(job_index, op_index)] = start
             ends[(job_index, op_index)] = end
 
+            # Setup time is modeled by padding every operation's occupancy of its machine
+            # with an extra `setup` units of changeover time charged *after* the operation
+            # -- this reserves that gap unconditionally, after every operation on that
+            # machine (including the very last one), and between two consecutive
+            # operations of the *same* job on the same machine too, not only between
+            # operations belonging to different jobs. `NewIntervalVar` already posts the
+            # constraint `padded_end == start + size`, so no separate `model.Add` is needed.
             setup = problem.constraints.setup_times.get(operation.machine_id, 0)
             padded_end = model.NewIntVar(0, horizon, f"padded_end_{job_index}_{op_index}")
-            model.Add(padded_end == start + operation.duration + setup)
             padded_interval = model.NewIntervalVar(
                 start, operation.duration + setup, padded_end, f"padded_{job_index}_{op_index}"
             )
@@ -128,6 +134,10 @@ def _outcome_from_solve(status, solver, starts, ends, problem: ProblemSpec) -> S
         )
 
     if status == cp_model.INFEASIBLE:
-        return SolveOutcome(status="infeasible", message="No feasible schedule exists for this problem.")
+        return SolveOutcome(
+            status="infeasible", message="No feasible schedule exists for this problem."
+        )
 
-    return SolveOutcome(status="failed", message=f"Solver returned status {solver.StatusName(status)}.")
+    return SolveOutcome(
+        status="failed", message=f"Solver returned status {solver.StatusName(status)}."
+    )
