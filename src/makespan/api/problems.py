@@ -77,6 +77,7 @@ def list_solves_for_problem(
             id=r.id,
             status=r.status,
             best_objective=r.best_objective,
+            objective_mode=r.objective_mode,
             created_at=r.created_at,
         )
         for r in records

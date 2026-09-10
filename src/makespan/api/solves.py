@@ -27,6 +27,7 @@ class SolveStatus(BaseModel):
     elapsed_seconds: Optional[float]
     schedule: Optional[list[dict]]
     message: Optional[str] = None
+    objective_mode: Optional[str] = None
 
 
 def _record_to_problem_spec(record: ProblemRecord) -> ProblemSpec:
@@ -112,6 +113,7 @@ def create_solve(
         best_bound=None,
         elapsed_seconds=None,
         schedule=None,
+        objective_mode=solve_record.objective_mode,
     )
 
 
@@ -130,13 +132,20 @@ def get_solve(solve_id: str, session: Session = Depends(get_session)) -> SolveSt
             best_bound=sample.best_bound,
             elapsed_seconds=sample.elapsed_seconds,
             schedule=None,
+            objective_mode=record.objective_mode,
         )
+
+    elapsed_seconds = None
+    if record.finished_at is not None:
+        elapsed_seconds = (record.finished_at - record.created_at).total_seconds()
 
     return SolveStatus(
         id=record.id,
         status=record.status,
         best_objective=record.best_objective,
         best_bound=record.best_bound,
-        elapsed_seconds=None,
+        elapsed_seconds=elapsed_seconds,
         schedule=record.schedule,
+        message=record.message,
+        objective_mode=record.objective_mode,
     )

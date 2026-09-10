@@ -4,7 +4,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from makespan.api import solves as solves_module
 from makespan.db.models import SolveRecord
-from makespan.solver.models import Job, Operation, ProblemSpec
+from makespan.solver.models import Job, Operation, ProblemSpec, SolveOutcome
 from makespan.solver.progress_store import progress_store
 
 
@@ -13,8 +13,18 @@ def test_create_solve_runs_and_completes(client):
         "name": "Demo",
         "machines": ["M1", "M2"],
         "jobs": [
-            {"operations": [{"machine_id": "M1", "duration": 3}, {"machine_id": "M2", "duration": 2}]},
-            {"operations": [{"machine_id": "M2", "duration": 4}, {"machine_id": "M1", "duration": 1}]},
+            {
+                "operations": [
+                    {"machine_id": "M1", "duration": 3},
+                    {"machine_id": "M2", "duration": 2},
+                ]
+            },
+            {
+                "operations": [
+                    {"machine_id": "M2", "duration": 4},
+                    {"machine_id": "M1", "duration": 1},
+                ]
+            },
         ],
     }
     problem = client.post("/api/problems", json=problem_payload).json()
@@ -99,3 +109,36 @@ def test_run_solve_marks_failed_on_unexpected_exception(tmp_path, monkeypatch):
         assert "KeyError" in record.message or "(0, -1)" in record.message
 
     assert progress_store.get(solve_id) is None
+
+
+def test_get_solve_returns_message_for_infeasible_outcome(client, monkeypatch):
+    # The solver's SolveOutcome.message must survive the round trip through the DB and
+    # back out through GET /api/solves/{id}, not just be computed and discarded.
+    problem_payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 1}]}],
+    }
+    problem = client.post("/api/problems", json=problem_payload).json()
+
+    def _fake_solve(*args, **kwargs):
+        return SolveOutcome(
+            status="infeasible", message="No feasible schedule exists for this problem."
+        )
+
+    monkeypatch.setattr(solves_module, "solve", _fake_solve)
+
+    create_response = client.post(
+        "/api/solves", json={"problem_id": problem["id"], "time_limit_seconds": 5}
+    )
+    solve_id = create_response.json()["id"]
+
+    status = None
+    for _ in range(50):
+        status = client.get(f"/api/solves/{solve_id}").json()
+        if status["status"] == "failed":
+            break
+        time.sleep(0.1)
+
+    assert status["status"] == "failed"
+    assert status["message"] == "No feasible schedule exists for this problem."

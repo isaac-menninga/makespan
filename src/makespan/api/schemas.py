@@ -24,4 +24,5 @@ class SolveSummary(BaseModel):
     id: str
     status: str
     best_objective: int | None
+    objective_mode: str
     created_at: datetime
