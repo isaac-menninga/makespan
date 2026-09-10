@@ -13,7 +13,10 @@ def solve(
 ) -> SolveOutcome:
     model = cp_model.CpModel()
 
-    horizon = sum(op.duration for job in problem.jobs for op in job.operations)
+    total_duration = sum(op.duration for job in problem.jobs for op in job.operations)
+    total_op_count = sum(len(job.operations) for job in problem.jobs)
+    total_setup = sum(problem.constraints.setup_times.values()) * total_op_count
+    horizon = total_duration + total_setup
 
     starts: dict[tuple[int, int], cp_model.IntVar] = {}
     ends: dict[tuple[int, int], cp_model.IntVar] = {}
@@ -23,10 +26,17 @@ def solve(
         for op_index, operation in enumerate(job.operations):
             start = model.NewIntVar(0, horizon, f"start_{job_index}_{op_index}")
             end = model.NewIntVar(0, horizon, f"end_{job_index}_{op_index}")
-            interval = model.NewIntervalVar(start, operation.duration, end, f"interval_{job_index}_{op_index}")
+            model.NewIntervalVar(start, operation.duration, end, f"interval_{job_index}_{op_index}")
             starts[(job_index, op_index)] = start
             ends[(job_index, op_index)] = end
-            machine_intervals[operation.machine_id].append(interval)
+
+            setup = problem.constraints.setup_times.get(operation.machine_id, 0)
+            padded_end = model.NewIntVar(0, horizon, f"padded_end_{job_index}_{op_index}")
+            model.Add(padded_end == start + operation.duration + setup)
+            padded_interval = model.NewIntervalVar(
+                start, operation.duration + setup, padded_end, f"padded_{job_index}_{op_index}"
+            )
+            machine_intervals[operation.machine_id].append(padded_interval)
 
             if op_index > 0:
                 model.Add(start >= ends[(job_index, op_index - 1)])
