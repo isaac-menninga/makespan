@@ -44,25 +44,41 @@ def _run_solve(solve_id: str, problem: ProblemSpec, time_limit_seconds: int, eng
         session.add(record)
         session.commit()
 
-    outcome: SolveOutcome = solve(
-        problem,
-        time_limit_seconds=time_limit_seconds,
-        on_progress=lambda sample: progress_store.set(solve_id, sample),
-    )
-
-    with Session(engine) as session:
-        record = session.get(SolveRecord, solve_id)
-        record.status = "failed" if outcome.status in ("infeasible", "failed") else "completed"
-        record.best_objective = outcome.objective
-        record.best_bound = outcome.best_bound
-        record.schedule = (
-            [op.model_dump() for op in outcome.schedule.operations] if outcome.schedule else None
+    try:
+        outcome: SolveOutcome = solve(
+            problem,
+            time_limit_seconds=time_limit_seconds,
+            on_progress=lambda sample: progress_store.set(solve_id, sample),
         )
-        record.finished_at = datetime.now(UTC)
-        session.add(record)
-        session.commit()
 
-    progress_store.clear(solve_id)
+        with Session(engine) as session:
+            record = session.get(SolveRecord, solve_id)
+            record.status = "failed" if outcome.status in ("infeasible", "failed") else "completed"
+            record.best_objective = outcome.objective
+            record.best_bound = outcome.best_bound
+            record.schedule = (
+                [op.model_dump() for op in outcome.schedule.operations]
+                if outcome.schedule
+                else None
+            )
+            record.message = outcome.message
+            record.finished_at = datetime.now(UTC)
+            session.add(record)
+            session.commit()
+    except Exception as exc:
+        # The request to *start* the solve already succeeded, so an unexpected exception
+        # here (solver bug, malformed problem that slipped past validation, etc.) must
+        # never crash this background task silently -- it must resolve the solve record
+        # to "failed" with a message instead of leaving it stuck at "running" forever.
+        with Session(engine) as session:
+            record = session.get(SolveRecord, solve_id)
+            record.status = "failed"
+            record.message = f"{type(exc).__name__}: {exc}"
+            record.finished_at = datetime.now(UTC)
+            session.add(record)
+            session.commit()
+    finally:
+        progress_store.clear(solve_id)
 
 
 @router.post("", response_model=SolveStatus, status_code=202)

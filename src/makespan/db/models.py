@@ -27,5 +27,6 @@ class SolveRecord(SQLModel, table=True):
     best_objective: Optional[int] = None
     best_bound: Optional[int] = None
     schedule: Optional[list[dict]] = Field(default=None, sa_column=Column(JSON))
+    message: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     finished_at: Optional[datetime] = None

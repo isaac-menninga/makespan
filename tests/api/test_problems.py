@@ -51,6 +51,65 @@ def test_get_unknown_problem_returns_404(client):
     assert response.status_code == 404
 
 
+def test_create_problem_rejects_empty_operations_list(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [{"operations": []}],
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+def test_create_problem_rejects_empty_job_list(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [],
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+def test_create_problem_rejects_negative_setup_time(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 3}]}],
+        "constraints": {"setup_times": {"M1": -1}},
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+def test_create_problem_rejects_downtime_window_end_before_start(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 3}]}],
+        "constraints": {"downtime_windows": [{"machine_id": "M1", "start": 5, "end": 2}]},
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+def test_create_problem_rejects_duplicate_due_date_job_index(client):
+    payload = {
+        "name": "Bad",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 3}]}],
+        "constraints": {
+            "due_dates": [
+                {"job_index": 0, "due": 5, "weight": 1},
+                {"job_index": 0, "due": 7, "weight": 2},
+            ]
+        },
+    }
+    response = client.post("/api/problems", json=payload)
+    assert response.status_code == 422
+
+
+
 def test_list_problems(client):
     client.post(
         "/api/problems",
