@@ -6,6 +6,27 @@ from makespan.solver.models import ProblemSpec, Schedule, ScheduledOperation, So
 from makespan.solver.progress import ProgressCallback, ProgressSample
 
 
+def _merge_windows(windows: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Merge overlapping or adjacent (start, end) windows into their union.
+
+    Two downtime windows on the same machine that overlap or touch would otherwise be
+    posted as separate fixed intervals inside that machine's AddNoOverlap set, and those
+    two *downtime* intervals would then conflict with each other, making the whole model
+    spuriously infeasible. Coalescing them into disjoint windows first avoids that.
+    """
+    if not windows:
+        return []
+    ordered = sorted(windows)
+    merged = [ordered[0]]
+    for start, end in ordered[1:]:
+        last_start, last_end = merged[-1]
+        if start <= last_end:
+            merged[-1] = (last_start, max(last_end, end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
 def solve(
     problem: ProblemSpec,
     time_limit_seconds: int = 30,
@@ -44,11 +65,21 @@ def solve(
             if op_index > 0:
                 model.Add(start >= ends[(job_index, op_index - 1)])
 
-    for downtime_index, downtime in enumerate(problem.constraints.downtime_windows):
-        downtime_interval = model.NewIntervalVar(
-            downtime.start, downtime.end - downtime.start, downtime.end, f"downtime_{downtime_index}"
+    downtime_by_machine: dict[str, list[tuple[int, int]]] = {}
+    for downtime in problem.constraints.downtime_windows:
+        downtime_by_machine.setdefault(downtime.machine_id, []).append(
+            (downtime.start, downtime.end)
         )
-        machine_intervals[downtime.machine_id].append(downtime_interval)
+
+    for machine_id, windows in downtime_by_machine.items():
+        for window_index, (window_start, window_end) in enumerate(_merge_windows(windows)):
+            downtime_interval = model.NewIntervalVar(
+                window_start,
+                window_end - window_start,
+                window_end,
+                f"downtime_{machine_id}_{window_index}",
+            )
+            machine_intervals[machine_id].append(downtime_interval)
 
     for intervals in machine_intervals.values():
         model.AddNoOverlap(intervals)
