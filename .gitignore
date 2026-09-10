@@ -20,3 +20,6 @@ __pycache__/
 # Solver output
 *.log
 output/
+
+# SQLite databases
+*.db
