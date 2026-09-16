@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 def test_create_and_get_problem(client):
     payload = {
         "name": "Demo",
@@ -20,6 +23,26 @@ def test_create_and_get_problem(client):
     get_response = client.get(f"/api/problems/{created['id']}")
     assert get_response.status_code == 200
     assert get_response.json()["machines"] == ["M1", "M2"]
+
+
+def test_problem_created_at_is_utc_aware(client):
+    # SQLite silently drops the tzinfo offset on round trip even though created_at is
+    # written as an aware UTC datetime, so a naive value leaking through the API would look
+    # like an unspecified local time to any client. Assert the returned timestamp string
+    # parses back into an aware datetime.
+    payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [{"operations": [{"machine_id": "M1", "duration": 1}]}],
+    }
+    created = client.post("/api/problems", json=payload).json()
+
+    parsed = datetime.fromisoformat(created["created_at"])
+    assert parsed.tzinfo is not None
+
+    summary = client.get("/api/problems").json()
+    summary_entry = next(p for p in summary if p["id"] == created["id"])
+    assert datetime.fromisoformat(summary_entry["created_at"]).tzinfo is not None
 
 
 def test_create_problem_rejects_unknown_machine_reference(client):

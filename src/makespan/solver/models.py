@@ -40,9 +40,7 @@ class Constraints(BaseModel):
     def check_setup_times_non_negative(cls, value: dict[str, int]) -> dict[str, int]:
         for machine_id, setup_time in value.items():
             if setup_time < 0:
-                raise ValueError(
-                    f"setup_times['{machine_id}'] must be >= 0, got {setup_time}"
-                )
+                raise ValueError(f"setup_times['{machine_id}'] must be >= 0, got {setup_time}")
         return value
 
     @field_validator("due_dates")
@@ -104,3 +102,4 @@ class SolveOutcome(BaseModel):
     best_bound: Optional[int] = None
     schedule: Optional[Schedule] = None
     message: Optional[str] = None
+    elapsed_seconds: Optional[float] = None

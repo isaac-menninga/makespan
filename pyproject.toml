@@ -1,7 +1,7 @@
 [project]
 name = "makespan"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI backend for solving job shop scheduling problems with OR-Tools CP-SAT."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -21,6 +21,7 @@ build-backend = "uv_build"
 [tool.ruff]
 line-length = 100
 target-version = "py314"
+extend-exclude = ["docs/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]  # pycodestyle errors, pyflakes, isort

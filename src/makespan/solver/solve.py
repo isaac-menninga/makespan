@@ -131,13 +131,18 @@ def _outcome_from_solve(status, solver, starts, ends, problem: ProblemSpec) -> S
             objective=int(solver.ObjectiveValue()),
             best_bound=int(solver.BestObjectiveBound()),
             schedule=schedule,
+            elapsed_seconds=solver.WallTime(),
         )
 
     if status == cp_model.INFEASIBLE:
         return SolveOutcome(
-            status="infeasible", message="No feasible schedule exists for this problem."
+            status="infeasible",
+            message="No feasible schedule exists for this problem.",
+            elapsed_seconds=solver.WallTime(),
         )
 
     return SolveOutcome(
-        status="failed", message=f"Solver returned status {solver.StatusName(status)}."
+        status="failed",
+        message=f"Solver returned status {solver.StatusName(status)}.",
+        elapsed_seconds=solver.WallTime(),
     )

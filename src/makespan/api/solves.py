@@ -39,13 +39,19 @@ def _record_to_problem_spec(record: ProblemRecord) -> ProblemSpec:
 
 
 def _run_solve(solve_id: str, problem: ProblemSpec, time_limit_seconds: int, engine) -> None:
-    with Session(engine) as session:
-        record = session.get(SolveRecord, solve_id)
-        record.status = "running"
-        session.add(record)
-        session.commit()
-
     try:
+        with Session(engine) as session:
+            record = session.get(SolveRecord, solve_id)
+            if record is None:
+                # The record disappeared between the request handler committing it and this
+                # background task starting (e.g. deleted out-of-band). There is nothing left
+                # to update, so just stop instead of letting an AttributeError propagate and
+                # strand the caller with no visibility into what happened.
+                return
+            record.status = "running"
+            session.add(record)
+            session.commit()
+
         outcome: SolveOutcome = solve(
             problem,
             time_limit_seconds=time_limit_seconds,
@@ -54,6 +60,8 @@ def _run_solve(solve_id: str, problem: ProblemSpec, time_limit_seconds: int, eng
 
         with Session(engine) as session:
             record = session.get(SolveRecord, solve_id)
+            if record is None:
+                return
             record.status = "failed" if outcome.status in ("infeasible", "failed") else "completed"
             record.best_objective = outcome.objective
             record.best_bound = outcome.best_bound
@@ -63,6 +71,7 @@ def _run_solve(solve_id: str, problem: ProblemSpec, time_limit_seconds: int, eng
                 else None
             )
             record.message = outcome.message
+            record.elapsed_seconds = outcome.elapsed_seconds
             record.finished_at = datetime.now(UTC)
             session.add(record)
             session.commit()
@@ -73,11 +82,12 @@ def _run_solve(solve_id: str, problem: ProblemSpec, time_limit_seconds: int, eng
         # to "failed" with a message instead of leaving it stuck at "running" forever.
         with Session(engine) as session:
             record = session.get(SolveRecord, solve_id)
-            record.status = "failed"
-            record.message = f"{type(exc).__name__}: {exc}"
-            record.finished_at = datetime.now(UTC)
-            session.add(record)
-            session.commit()
+            if record is not None:
+                record.status = "failed"
+                record.message = f"{type(exc).__name__}: {exc}"
+                record.finished_at = datetime.now(UTC)
+                session.add(record)
+                session.commit()
     finally:
         progress_store.clear(solve_id)
 
@@ -92,6 +102,11 @@ def create_solve(
     if problem_record is None:
         raise HTTPException(status_code=404, detail="Problem not found")
 
+    # Build (and thereby re-validate) the problem spec before writing anything to the DB,
+    # so a reconstruction failure raises a clean error instead of leaving an orphaned
+    # "pending" SolveRecord behind with no background task to ever resolve it.
+    problem_spec = _record_to_problem_spec(problem_record)
+
     solve_record = SolveRecord(
         problem_id=payload.problem_id,
         time_limit_seconds=payload.time_limit_seconds,
@@ -101,7 +116,6 @@ def create_solve(
     session.commit()
     session.refresh(solve_record)
 
-    problem_spec = _record_to_problem_spec(problem_record)
     background_tasks.add_task(
         _run_solve, solve_record.id, problem_spec, payload.time_limit_seconds, session.get_bind()
     )
@@ -135,16 +149,12 @@ def get_solve(solve_id: str, session: Session = Depends(get_session)) -> SolveSt
             objective_mode=record.objective_mode,
         )
 
-    elapsed_seconds = None
-    if record.finished_at is not None:
-        elapsed_seconds = (record.finished_at - record.created_at).total_seconds()
-
     return SolveStatus(
         id=record.id,
         status=record.status,
         best_objective=record.best_objective,
         best_bound=record.best_bound,
-        elapsed_seconds=elapsed_seconds,
+        elapsed_seconds=record.elapsed_seconds,
         schedule=record.schedule,
         message=record.message,
         objective_mode=record.objective_mode,

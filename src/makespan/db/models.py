@@ -28,5 +28,6 @@ class SolveRecord(SQLModel, table=True):
     best_bound: Optional[int] = None
     schedule: Optional[list[dict]] = Field(default=None, sa_column=Column(JSON))
     message: Optional[str] = None
+    elapsed_seconds: Optional[float] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     finished_at: Optional[datetime] = None
