@@ -1,10 +1,14 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+import os
 
-from makespan.db.seed import seed_presets
-from makespan.db.session import get_session
-from makespan.main import app
+os.environ.setdefault("MAKESPAN_DATABASE_URL", "sqlite:///:memory:")
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlmodel import Session, SQLModel, create_engine  # noqa: E402
+
+from makespan.db.seed import seed_presets  # noqa: E402
+from makespan.db.session import get_session  # noqa: E402
+from makespan.main import app  # noqa: E402
 
 
 @pytest.fixture()

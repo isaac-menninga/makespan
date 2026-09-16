@@ -118,22 +118,31 @@ PRESET_CATALOG: list[tuple[str, str, ProblemSpec]] = [
 
 
 def seed_presets(session: Session) -> None:
-    """Insert any preset Problem rows that don't already exist.
+    """Insert or refresh every preset Problem row from PRESET_CATALOG.
 
     Presets use fixed, well-known ids (see PRESET_IDS) rather than the
     random uuid4 ids regular Problem rows get, so this can run on every app
-    startup without creating duplicates.
+    startup without creating duplicates. Refreshing existing rows (rather
+    than skipping them) means a preset that's been modified via the API, or
+    a correction made to PRESET_CATALOG itself, is restored/applied on the
+    next restart.
     """
     for preset_id, name, spec in PRESET_CATALOG:
-        if session.get(ProblemRecord, preset_id) is not None:
-            continue
-        session.add(
-            ProblemRecord(
-                id=preset_id,
-                name=name,
-                machines=spec.machines,
-                jobs=[job.model_dump() for job in spec.jobs],
-                constraints=spec.constraints.model_dump(),
+        machines = spec.machines
+        jobs = [job.model_dump() for job in spec.jobs]
+        constraints = spec.constraints.model_dump()
+
+        record = session.get(ProblemRecord, preset_id)
+        if record is None:
+            session.add(
+                ProblemRecord(
+                    id=preset_id, name=name, machines=machines, jobs=jobs, constraints=constraints
+                )
             )
-        )
+        else:
+            record.name = name
+            record.machines = machines
+            record.jobs = jobs
+            record.constraints = constraints
+            session.add(record)
     session.commit()

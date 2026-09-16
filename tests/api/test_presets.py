@@ -1,3 +1,6 @@
+from makespan.db.seed import PRESET_IDS
+
+
 def test_list_presets_returns_seeded_problem_rows(client):
     response = client.get("/api/presets")
     assert response.status_code == 200
@@ -24,3 +27,17 @@ def test_preset_is_fetchable_as_a_regular_problem(client):
     assert body["id"] == ft06["id"]
     assert body["machines"] == ft06["machines"]
     assert body["jobs"] == ft06["jobs"]
+
+
+def test_presets_endpoint_only_returns_known_preset_ids(client):
+    client.post(
+        "/api/problems",
+        json={
+            "name": "Not a preset",
+            "machines": ["M1"],
+            "jobs": [{"operations": [{"machine_id": "M1", "duration": 1}]}],
+        },
+    )
+
+    presets = client.get("/api/presets").json()
+    assert {p["id"] for p in presets} == set(PRESET_IDS)
