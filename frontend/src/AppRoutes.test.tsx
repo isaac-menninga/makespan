@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { AppRoutes } from './AppRoutes'
 
@@ -11,6 +11,10 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('AppRoutes', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders a placeholder for the new-problem route', () => {
     render(
       <MemoryRouter initialEntries={['/problems/new']}>
@@ -40,6 +44,5 @@ describe('AppRoutes', () => {
       { wrapper },
     )
     expect(screen.getByRole('heading', { name: 'Makespan' })).toBeInTheDocument()
-    vi.unstubAllGlobals()
   })
 })

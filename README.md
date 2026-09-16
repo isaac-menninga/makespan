@@ -85,7 +85,7 @@ npm run build
 | `GET /api/health`                    | Liveness check.                                          |
 | `GET /api/presets`                   | List seeded demo problems.                               |
 | `POST /api/problems`                 | Create a problem (machines, jobs, constraints).          |
-| `GET /api/problems`                  | List problems.                                           |
+| `GET /api/problems`                  | List saved problems (presets excluded), with machine and job counts. |
 | `GET /api/problems/{id}`             | Fetch a single problem.                                  |
 | `PUT /api/problems/{id}`             | Replace a problem.                                       |
 | `GET /api/problems/{id}/solves`      | List solves run against a problem.                       |

@@ -49,7 +49,7 @@ export function GalleryPage() {
           <h2 className="text-lg font-medium text-slate-800">Your Problems</h2>
           <Link
             to="/problems/new"
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent/90"
           >
             New Problem
           </Link>

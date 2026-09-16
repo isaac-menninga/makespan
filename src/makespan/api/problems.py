@@ -61,9 +61,7 @@ def update_problem(
 
 @router.get("", response_model=list[ProblemSummary])
 def list_problems(session: Session = Depends(get_session)) -> list[ProblemSummary]:
-    records = session.exec(
-        select(ProblemRecord).where(ProblemRecord.id.notin_(PRESET_IDS))
-    ).all()
+    records = session.exec(select(ProblemRecord).where(ProblemRecord.id.notin_(PRESET_IDS))).all()
     return [
         ProblemSummary(
             id=r.id,
