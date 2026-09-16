@@ -36,6 +36,8 @@ class ProblemSummary(BaseModel):
     id: str
     name: str
     created_at: datetime
+    machine_count: int
+    job_count: int
 
     @field_serializer("created_at")
     def _serialize_created_at(self, value: datetime) -> datetime:

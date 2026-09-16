@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from makespan.db.seed import PRESET_IDS
+
 
 def test_create_and_get_problem(client):
     payload = {
@@ -176,3 +178,28 @@ def test_list_problems(client):
     assert response.status_code == 200
     names = [p["name"] for p in response.json()]
     assert "A" in names
+
+
+def test_list_problems_excludes_presets(client):
+    response = client.get("/api/problems")
+    assert response.status_code == 200
+    ids = {p["id"] for p in response.json()}
+    assert ids.isdisjoint(set(PRESET_IDS))
+
+
+def test_list_problems_includes_machine_and_job_counts(client):
+    client.post(
+        "/api/problems",
+        json={
+            "name": "Counts",
+            "machines": ["M1", "M2"],
+            "jobs": [
+                {"operations": [{"machine_id": "M1", "duration": 1}]},
+                {"operations": [{"machine_id": "M2", "duration": 2}]},
+            ],
+        },
+    )
+    response = client.get("/api/problems")
+    entry = next(p for p in response.json() if p["name"] == "Counts")
+    assert entry["machine_count"] == 2
+    assert entry["job_count"] == 2

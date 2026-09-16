@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 
 from makespan.api.schemas import ProblemIn, ProblemOut, ProblemSummary, SolveSummary
 from makespan.db.models import ProblemRecord, SolveRecord
+from makespan.db.seed import PRESET_IDS
 from makespan.db.session import get_session
 
 router = APIRouter(prefix="/api/problems", tags=["problems"])
@@ -60,8 +61,19 @@ def update_problem(
 
 @router.get("", response_model=list[ProblemSummary])
 def list_problems(session: Session = Depends(get_session)) -> list[ProblemSummary]:
-    records = session.exec(select(ProblemRecord)).all()
-    return [ProblemSummary(id=r.id, name=r.name, created_at=r.created_at) for r in records]
+    records = session.exec(
+        select(ProblemRecord).where(ProblemRecord.id.notin_(PRESET_IDS))
+    ).all()
+    return [
+        ProblemSummary(
+            id=r.id,
+            name=r.name,
+            created_at=r.created_at,
+            machine_count=len(r.machines),
+            job_count=len(r.jobs),
+        )
+        for r in records
+    ]
 
 
 @router.get("/{problem_id}/solves", response_model=list[SolveSummary])
