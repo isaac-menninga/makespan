@@ -42,6 +42,42 @@ Once the server is running, FastAPI's auto-generated interactive docs are
 available at `http://localhost:8000/docs` (Swagger UI) and
 `http://localhost:8000/redoc`.
 
+## Frontend
+
+The frontend lives in `frontend/` (Vite + React + TypeScript). Run the
+backend and frontend as two separate processes during development:
+
+```bash
+# terminal 1: backend
+uv run uvicorn makespan.main:app --reload
+
+# terminal 2: frontend
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite dev server proxies `/api/*` requests to `http://localhost:8000`,
+so open the URL Vite prints (typically `http://localhost:5173`) once both
+are running.
+
+After a backend schema change, regenerate the typed API client (requires
+the backend running):
+
+```bash
+cd frontend
+npm run generate-types
+```
+
+Frontend checks:
+
+```bash
+cd frontend
+npm run lint
+npm test
+npm run build
+```
+
 ## API overview
 
 | Method & path                       | Description                                             |
