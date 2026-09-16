@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 
+from makespan.db.seed import seed_presets
 from makespan.db.session import get_session
 from makespan.main import app
 
@@ -12,6 +13,8 @@ def client(tmp_path):
         f"sqlite:///{tmp_path / 'test.db'}", connect_args={"check_same_thread": False}
     )
     SQLModel.metadata.create_all(test_engine)
+    with Session(test_engine) as session:
+        seed_presets(session)
 
     def override_get_session():
         with Session(test_engine) as session:

@@ -2,16 +2,20 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI
+from sqlmodel import Session
 
 from makespan.api.presets import router as presets_router
 from makespan.api.problems import router as problems_router
 from makespan.api.solves import router as solves_router
-from makespan.db.session import init_db
+from makespan.db.seed import seed_presets
+from makespan.db.session import engine, init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db()
+    with Session(engine) as session:
+        seed_presets(session)
     yield
 
 

@@ -8,7 +8,7 @@ from makespan.db.session import get_session
 router = APIRouter(prefix="/api/problems", tags=["problems"])
 
 
-def _to_out(record: ProblemRecord) -> ProblemOut:
+def record_to_problem_out(record: ProblemRecord) -> ProblemOut:
     return ProblemOut(
         id=record.id,
         name=record.name,
@@ -30,7 +30,7 @@ def create_problem(problem: ProblemIn, session: Session = Depends(get_session)) 
     session.add(record)
     session.commit()
     session.refresh(record)
-    return _to_out(record)
+    return record_to_problem_out(record)
 
 
 @router.get("/{problem_id}", response_model=ProblemOut)
@@ -38,7 +38,7 @@ def get_problem(problem_id: str, session: Session = Depends(get_session)) -> Pro
     record = session.get(ProblemRecord, problem_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Problem not found")
-    return _to_out(record)
+    return record_to_problem_out(record)
 
 
 @router.put("/{problem_id}", response_model=ProblemOut)
@@ -55,7 +55,7 @@ def update_problem(
     session.add(record)
     session.commit()
     session.refresh(record)
-    return _to_out(record)
+    return record_to_problem_out(record)
 
 
 @router.get("", response_model=list[ProblemSummary])
