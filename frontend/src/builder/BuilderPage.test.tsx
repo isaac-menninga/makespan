@@ -16,10 +16,12 @@ function renderAt(path: string) {
     [
       { path: '/problems/new', element: <BuilderPage /> },
       { path: '/problems/:id', element: <BuilderPage /> },
+      { path: '/other', element: <p>Elsewhere</p> },
     ],
     { initialEntries: [path] },
   )
-  return render(<RouterProvider router={router} />, { wrapper })
+  render(<RouterProvider router={router} />, { wrapper })
+  return { router }
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -85,6 +87,94 @@ describe('BuilderPage', () => {
     await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(0))
     const [request] = vi.mocked(fetch).mock.calls[0]
     expect((request as Request).method).toBe('POST')
+  })
+
+  it('redirects to /problems/:id after a successful create with no unsaved-changes dialog', async () => {
+    const user = userEvent.setup()
+    const created = {
+      id: 'new-id',
+      name: 'M1',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: '', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(created, 201)))
+
+    const { router } = renderAt('/problems/new')
+    await user.type(screen.getByLabelText('Machine name'), 'M1')
+    await user.selectOptions(screen.getByLabelText('Machine'), 'M1')
+    await user.click(screen.getByText('Save'))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/problems/new-id'))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('does not show the unsaved-changes dialog for an untouched existing problem, even after a re-render', async () => {
+    const user = userEvent.setup()
+    const problem = {
+      id: 'abc',
+      name: 'Demo',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    // GET succeeds; the subsequent PUT (from an unmodified save attempt)
+    // fails. Failing a save flips the mutation's own isPending/isError
+    // state, forcing ExistingProblemBuilder to re-render without the user
+    // having edited anything — the scenario that exposes an impure
+    // hydrate() call minting fresh ids on every render.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((request: Request) => {
+        if (request.method === 'PUT') return Promise.resolve(jsonResponse({ detail: 'boom' }, 500))
+        return Promise.resolve(jsonResponse(problem))
+      }),
+    )
+
+    const { router } = renderAt('/problems/abc')
+    await screen.findByLabelText('Problem name')
+
+    await user.click(screen.getByText('Save'))
+    await waitFor(() => expect(screen.getByText('Save')).not.toBeDisabled())
+
+    router.navigate('/other')
+
+    expect(await screen.findByText('Elsewhere')).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('serializes the entered draft into the POST body on save', async () => {
+    const user = userEvent.setup()
+    const created = {
+      id: 'new-id',
+      name: 'M1',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(created, 201)))
+
+    renderAt('/problems/new')
+    await user.type(screen.getByLabelText('Machine name'), 'M1')
+    await user.selectOptions(screen.getByLabelText('Machine'), 'M1')
+    await user.clear(screen.getByLabelText('Duration'))
+    await user.type(screen.getByLabelText('Duration'), '5')
+    await user.type(screen.getByLabelText('Due date'), '10')
+    await user.type(screen.getByLabelText('Weight'), '2')
+    await user.click(screen.getByText('Save'))
+
+    await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(0))
+    const [request] = vi.mocked(fetch).mock.calls[0]
+    const body = await (request as Request).json()
+
+    expect(body.machines).toEqual(['M1'])
+    expect(body.jobs).toEqual([{ operations: [{ machine_id: 'M1', duration: 5 }] }])
+    expect(body.constraints).toMatchObject({
+      due_dates: [{ job_index: 0, due: 10, weight: 2 }],
+    })
   })
 
   it('PUTs an update in place on save for an existing problem', async () => {

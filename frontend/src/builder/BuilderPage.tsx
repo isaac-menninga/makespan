@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router'
 import { useCreateProblem, useProblem, useUpdateProblem } from '../api/queries'
 import { BuilderForm, createEmptyDraft } from './BuilderForm'
@@ -21,18 +22,29 @@ function NewProblemBuilder() {
   const createProblem = useCreateProblem()
   const [saveErrors, setSaveErrors] = useState<ValidationResult>()
   const [initialDraft] = useState(createEmptyDraft)
+  const [savedDraft, setSavedDraft] = useState<BuilderDraft>(initialDraft)
 
   return (
     <BuilderForm
       initialDraft={initialDraft}
-      savedDraft={initialDraft}
+      savedDraft={savedDraft}
       onBack={() => navigate('/')}
       isSaving={createProblem.isPending}
       saveErrors={saveErrors}
       onSave={(draft: BuilderDraft) => {
         setSaveErrors(undefined)
         createProblem.mutate(serialize(draft), {
-          onSuccess: (created) => navigate(`/problems/${created.id}`, { replace: true }),
+          onSuccess: (created) => {
+            // Flush the "saved" snapshot synchronously so BuilderForm's
+            // isDirty check (and useBlocker's predicate, which re-registers
+            // via an effect) sees a clean draft *before* we navigate away.
+            // Without this, the navigate() below races the state update and
+            // the unsaved-changes dialog blocks the post-save redirect,
+            // leaving the record created server-side but the user stuck on
+            // /problems/new with Save re-enabled (risking a duplicate POST).
+            flushSync(() => setSavedDraft(draft))
+            navigate(`/problems/${created.id}`, { replace: true })
+          },
           onError: (error) => {
             setSaveErrors(
               isHTTPValidationError(error) ? mapValidationErrors(error.detail, draft) : undefined,
@@ -51,6 +63,21 @@ function ExistingProblemBuilder({ id }: { id: string }) {
   const [saveErrors, setSaveErrors] = useState<ValidationResult>()
   const [savedDraft, setSavedDraft] = useState<BuilderDraft>()
 
+  // Memoized on problem.data's reference (TanStack Query keeps the same
+  // reference across re-renders when the underlying data hasn't changed) so
+  // the ids minted by hydrate() stay stable across re-renders — including
+  // while the problem is still loading, when problem.data is undefined.
+  // Without this, any re-render before the first successful save (e.g.
+  // after a failed save attempt) would call hydrate() again, mint fresh
+  // crypto.randomUUID() ids, and make the dirty-check see a "changed" draft
+  // even though the user never touched anything. Must be called
+  // unconditionally (before the early returns below) to satisfy the rules
+  // of hooks.
+  const initialDraft = useMemo(
+    () => (problem.data ? hydrate(problem.data) : undefined),
+    [problem.data],
+  )
+
   if (problem.isPending) {
     return <main className="mx-auto max-w-3xl p-8 text-slate-500">Loading…</main>
   }
@@ -66,7 +93,7 @@ function ExistingProblemBuilder({ id }: { id: string }) {
     )
   }
 
-  const currentSavedDraft = savedDraft ?? hydrate(problem.data)
+  const currentSavedDraft = savedDraft ?? initialDraft!
 
   return (
     <BuilderForm

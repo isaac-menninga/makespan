@@ -133,6 +133,22 @@ describe('BuilderForm', () => {
     expect(await screen.findByText('Elsewhere')).toBeInTheDocument()
   })
 
+  it('stays on the current page when Cancel is clicked on the unsaved-changes dialog', async () => {
+    const user = userEvent.setup()
+    const { router } = renderBuilderForm()
+
+    await user.type(screen.getByLabelText('Machine name'), 'M1')
+    router.navigate('/other')
+
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+
+    await user.click(screen.getByText('Cancel'))
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
+    expect(screen.queryByText('Elsewhere')).not.toBeInTheDocument()
+  })
+
   it('does not block navigation when there are no unsaved changes', async () => {
     const { router } = renderBuilderForm()
     router.navigate('/other')
