@@ -36,4 +36,10 @@ describe('routes', () => {
     renderAt('/')
     expect(screen.getByRole('heading', { name: 'Makespan' })).toBeInTheDocument()
   })
+
+  it('renders the Solve view on the solve route', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    renderAt('/problems/abc/solves/xyz')
+    expect(await screen.findByText(/loading/i)).toBeInTheDocument()
+  })
 })
