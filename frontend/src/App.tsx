@@ -1,12 +1,10 @@
-import { BrowserRouter } from 'react-router'
-import { AppRoutes } from './AppRoutes'
+import { RouterProvider, createBrowserRouter } from 'react-router'
+import { routes } from './AppRoutes'
+
+const router = createBrowserRouter(routes)
 
 function App() {
-  return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App

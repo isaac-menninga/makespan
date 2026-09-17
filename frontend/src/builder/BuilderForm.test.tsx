@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { BuilderForm, createEmptyDraft } from './BuilderForm'
 import type { BuilderDraft } from './types'
@@ -8,19 +8,24 @@ import type { BuilderDraft } from './types'
 function renderBuilderForm(overrides: Partial<Parameters<typeof BuilderForm>[0]> = {}) {
   const initialDraft = overrides.initialDraft ?? createEmptyDraft()
   const onSave = vi.fn()
-  render(
-    <MemoryRouter>
-      <BuilderForm
-        initialDraft={initialDraft}
-        savedDraft={initialDraft}
-        onBack={vi.fn()}
-        onSave={onSave}
-        isSaving={false}
-        {...overrides}
-      />
-    </MemoryRouter>,
-  )
-  return { onSave }
+  const router = createMemoryRouter([
+    {
+      path: '/',
+      element: (
+        <BuilderForm
+          initialDraft={initialDraft}
+          savedDraft={initialDraft}
+          onBack={vi.fn()}
+          onSave={onSave}
+          isSaving={false}
+          {...overrides}
+        />
+      ),
+    },
+    { path: '/other', element: <p>Elsewhere</p> },
+  ])
+  render(<RouterProvider router={router} />)
+  return { onSave, router }
 }
 
 function draftWithTwoMachines(): BuilderDraft {
@@ -113,5 +118,24 @@ describe('BuilderForm', () => {
       },
     })
     expect(screen.getByText('Something went wrong on the server.')).toBeInTheDocument()
+  })
+
+  it('blocks navigation with a confirm prompt when there are unsaved changes', async () => {
+    const user = userEvent.setup()
+    const { router } = renderBuilderForm()
+
+    await user.type(screen.getByLabelText('Machine name'), 'M1')
+    router.navigate('/other')
+
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+
+    await user.click(screen.getByText('Leave'))
+    expect(await screen.findByText('Elsewhere')).toBeInTheDocument()
+  })
+
+  it('does not block navigation when there are no unsaved changes', async () => {
+    const { router } = renderBuilderForm()
+    router.navigate('/other')
+    expect(await screen.findByText('Elsewhere')).toBeInTheDocument()
   })
 })

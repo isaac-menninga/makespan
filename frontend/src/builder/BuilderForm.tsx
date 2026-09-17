@@ -1,4 +1,5 @@
 import { useMemo, useReducer } from 'react'
+import { useBlocker } from 'react-router'
 import { generateId } from './id'
 import { builderReducer, newJob } from './reducer'
 import { getMachineUsage, validateDraft, type ValidationResult } from './validate'
@@ -30,6 +31,7 @@ type BuilderFormProps = {
 
 export function BuilderForm({
   initialDraft,
+  savedDraft,
   onBack,
   onSave,
   isSaving,
@@ -37,6 +39,8 @@ export function BuilderForm({
   saveErrors,
 }: BuilderFormProps) {
   const [draft, dispatch] = useReducer(builderReducer, initialDraft)
+  const isDirty = JSON.stringify(draft) !== JSON.stringify(savedDraft)
+  const blocker = useBlocker(isDirty)
   const validation = useMemo(() => validateDraft(draft), [draft])
   const usage = useMemo(() => getMachineUsage(draft), [draft])
   const errors = saveErrors ?? validation
@@ -119,6 +123,26 @@ export function BuilderForm({
           + Add Job
         </button>
       </section>
+
+      {blocker.state === 'blocked' ? (
+        <div
+          role="alertdialog"
+          aria-label="Unsaved changes"
+          className="fixed inset-0 flex items-center justify-center bg-black/30"
+        >
+          <div className="rounded-md bg-white p-4 shadow-lg">
+            <p className="text-sm text-slate-700">You have unsaved changes. Leave anyway?</p>
+            <div className="mt-3 flex justify-end gap-2">
+              <button type="button" onClick={() => blocker.reset()} className="text-sm">
+                Cancel
+              </button>
+              <button type="button" onClick={() => blocker.proceed()} className="text-sm text-red-600">
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BuilderPage } from './BuilderPage'
 
@@ -12,15 +12,14 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 function renderAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/problems/new" element={<BuilderPage />} />
-        <Route path="/problems/:id" element={<BuilderPage />} />
-      </Routes>
-    </MemoryRouter>,
-    { wrapper },
+  const router = createMemoryRouter(
+    [
+      { path: '/problems/new', element: <BuilderPage /> },
+      { path: '/problems/:id', element: <BuilderPage /> },
+    ],
+    { initialEntries: [path] },
   )
+  return render(<RouterProvider router={router} />, { wrapper })
 }
 
 function jsonResponse(body: unknown, status = 200) {

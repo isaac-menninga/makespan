@@ -1,13 +1,9 @@
-import { Route, Routes } from 'react-router'
-import { ComingSoonPage } from './routes/ComingSoonPage'
+import type { RouteObject } from 'react-router'
 import { GalleryPage } from './gallery/GalleryPage'
+import { BuilderPage } from './builder/BuilderPage'
 
-export function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<GalleryPage />} />
-      <Route path="/problems/new" element={<ComingSoonPage title="The problem builder" />} />
-      <Route path="/problems/:id" element={<ComingSoonPage title="The problem builder" />} />
-    </Routes>
-  )
-}
+export const routes: RouteObject[] = [
+  { path: '/', element: <GalleryPage /> },
+  { path: '/problems/new', element: <BuilderPage /> },
+  { path: '/problems/:id', element: <BuilderPage /> },
+]

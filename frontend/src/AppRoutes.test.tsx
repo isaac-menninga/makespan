@@ -1,48 +1,39 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter } from 'react-router'
-import { AppRoutes } from './AppRoutes'
+import { routes } from './AppRoutes'
 
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
-describe('AppRoutes', () => {
+function renderAt(path: string) {
+  const router = createMemoryRouter(routes, { initialEntries: [path] })
+  return render(<RouterProvider router={router} />, { wrapper })
+}
+
+describe('routes', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  it('renders a placeholder for the new-problem route', () => {
-    render(
-      <MemoryRouter initialEntries={['/problems/new']}>
-        <AppRoutes />
-      </MemoryRouter>,
-      { wrapper },
-    )
-    expect(screen.getByText(/problem builder is coming/i)).toBeInTheDocument()
+  it('renders the Builder on the new-problem route', () => {
+    renderAt('/problems/new')
+    expect(screen.getByLabelText('Problem name')).toBeInTheDocument()
   })
 
-  it('renders a placeholder for an existing-problem route', () => {
-    render(
-      <MemoryRouter initialEntries={['/problems/abc-123']}>
-        <AppRoutes />
-      </MemoryRouter>,
-      { wrapper },
-    )
-    expect(screen.getByText(/problem builder is coming/i)).toBeInTheDocument()
+  it('renders a loading state on an existing-problem route', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    renderAt('/problems/abc-123')
+    expect(await screen.findByText(/loading/i)).toBeInTheDocument()
   })
 
   it('renders the Gallery on the root route', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <AppRoutes />
-      </MemoryRouter>,
-      { wrapper },
-    )
+    renderAt('/')
     expect(screen.getByRole('heading', { name: 'Makespan' })).toBeInTheDocument()
   })
 })
