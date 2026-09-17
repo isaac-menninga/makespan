@@ -12,13 +12,13 @@ export function GalleryPage() {
   const savedProblems = useSavedProblems()
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <h1 className="text-2xl font-semibold text-slate-900">Makespan</h1>
+    <main className="mx-auto max-w-(--content-max-width) p-8">
+      <h1 className="text-2xl font-semibold text-slate-900">Gallery</h1>
 
       <section className="mt-8">
         <h2 className="text-lg font-medium text-slate-800">Presets</h2>
         {presets.isPending ? (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <CardSkeleton />
             <CardSkeleton />
           </div>
@@ -30,7 +30,7 @@ export function GalleryPage() {
             </button>
           </div>
         ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {presets.data.map((preset) => (
               <ProblemCard
                 key={preset.id}
@@ -55,7 +55,7 @@ export function GalleryPage() {
           </Link>
         </div>
         {savedProblems.isPending ? (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <CardSkeleton />
           </div>
         ) : savedProblems.isError ? (
@@ -74,7 +74,7 @@ export function GalleryPage() {
             .
           </p>
         ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {savedProblems.data.map((problem) => (
               <ProblemCard
                 key={problem.id}

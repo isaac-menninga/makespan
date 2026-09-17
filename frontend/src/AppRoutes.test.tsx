@@ -34,7 +34,7 @@ describe('routes', () => {
   it('renders the Gallery on the root route', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     renderAt('/')
-    expect(screen.getByRole('heading', { name: 'Makespan' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Gallery' })).toBeInTheDocument()
   })
 
   it('renders the Solve view on the solve route', async () => {
