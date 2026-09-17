@@ -61,10 +61,11 @@ No backend changes.
   narrow single-column form — is completely unchanged: same width, same
   structure, no reflow. Its real redesign is the bookmarked future effort
   named above.
-- **No mobile/narrow-viewport nav collapse.** The rail stays a fixed
-  width at all viewport sizes. This app is framed as power-user/desktop
-  oriented; a collapsing/hamburger nav is an explicit non-goal for this
-  phase, not an oversight.
+- **Mobile/narrow-viewport nav collapse is bookmarked, not built now.**
+  The rail stays a fixed width at all viewport sizes in this phase. This
+  app is framed as power-user/desktop oriented for now, but better
+  small-screen support (e.g. a collapsing/hamburger nav) is a reasonable
+  future direction, not a closed door — just not part of this phase.
 - **The nav rail is not sticky/pinned.** It scrolls with the page in
   normal document flow, rather than staying fixed in the viewport while
   content scrolls beneath it. Simpler, and consistent with "branding only"
@@ -218,9 +219,10 @@ Referenced via Tailwind v4's arbitrary-value-from-custom-property syntax:
   same future phase as job naming).
 - Richer left-nav content: saved-problem shortcuts, icons, a
   collapsed/expanded state, or any nav content beyond branding.
-- Mobile/narrow-viewport nav collapse — the rail stays fixed-width at
-  every viewport size; this is a desktop/power-user-oriented app by
-  explicit framing, not a decision to revisit lightly.
+- Mobile/narrow-viewport nav collapse — bookmarked, not closed. The rail
+  stays fixed-width at every viewport size in this phase; the app is
+  desktop/power-user-oriented for now, but better small-screen support is
+  a reasonable direction to pick up later.
 - A sticky/pinned nav rail that stays visible while content scrolls — the
   rail scrolls with the page in normal document flow.
 - Dark mode (standing constraint from Phase 1, unchanged).
