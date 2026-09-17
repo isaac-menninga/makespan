@@ -1,0 +1,75 @@
+[
+  {
+    "description": "a minimal valid problem",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M1", "duration": 1 }] }]
+    },
+    "shouldBeValid": true
+  },
+  {
+    "description": "a valid problem with a due date",
+    "problem": {
+      "machines": ["M1", "M2"],
+      "jobs": [
+        { "operations": [{ "machine_id": "M1", "duration": 3 }] },
+        { "operations": [{ "machine_id": "M2", "duration": 2 }] }
+      ],
+      "constraints": { "due_dates": [{ "job_index": 0, "due": 10, "weight": 2 }] }
+    },
+    "shouldBeValid": true
+  },
+  {
+    "description": "an empty jobs list",
+    "problem": { "machines": ["M1"], "jobs": [] },
+    "shouldBeValid": false
+  },
+  {
+    "description": "a job with zero operations",
+    "problem": { "machines": ["M1"], "jobs": [{ "operations": [] }] },
+    "shouldBeValid": false
+  },
+  {
+    "description": "an operation with zero duration",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M1", "duration": 0 }] }]
+    },
+    "shouldBeValid": false
+  },
+  {
+    "description": "an operation referencing an unknown machine",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M2", "duration": 1 }] }]
+    },
+    "shouldBeValid": false
+  },
+  {
+    "description": "a downtime window with end before start",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M1", "duration": 1 }] }],
+      "constraints": { "downtime_windows": [{ "machine_id": "M1", "start": 10, "end": 5 }] }
+    },
+    "shouldBeValid": false
+  },
+  {
+    "description": "setup_times referencing an unknown machine",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M1", "duration": 1 }] }],
+      "constraints": { "setup_times": { "M2": 5 } }
+    },
+    "shouldBeValid": false
+  },
+  {
+    "description": "a negative setup time",
+    "problem": {
+      "machines": ["M1"],
+      "jobs": [{ "operations": [{ "machine_id": "M1", "duration": 1 }] }],
+      "constraints": { "setup_times": { "M1": -1 } }
+    },
+    "shouldBeValid": false
+  }
+]
