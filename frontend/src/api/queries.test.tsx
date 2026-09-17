@@ -2,7 +2,16 @@ import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { useCreateProblem, useProblem, useSavedProblems, usePresets, useUpdateProblem } from './queries'
+import {
+  useCreateProblem,
+  useProblem,
+  useSavedProblems,
+  usePresets,
+  useUpdateProblem,
+  getSolveRefetchInterval,
+  useCreateSolve,
+  useSolve,
+} from './queries'
 
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -138,5 +147,63 @@ describe('useUpdateProblem', () => {
     const [request] = vi.mocked(fetch).mock.calls[0]
     expect((request as Request).method).toBe('PUT')
     expect((request as Request).url).toContain('/api/problems/abc')
+  })
+})
+
+describe('getSolveRefetchInterval', () => {
+  it('polls every second while pending or running', () => {
+    expect(getSolveRefetchInterval('pending')).toBe(1000)
+    expect(getSolveRefetchInterval('running')).toBe(1000)
+  })
+
+  it('stops polling once terminal, or when the status is unknown', () => {
+    expect(getSolveRefetchInterval('completed')).toBe(false)
+    expect(getSolveRefetchInterval('failed')).toBe(false)
+    expect(getSolveRefetchInterval(undefined)).toBe(false)
+  })
+})
+
+describe('useCreateSolve', () => {
+  it('POSTs the payload and returns the created solve', async () => {
+    const created = {
+      id: 'solve-1',
+      status: 'pending',
+      best_objective: null,
+      best_bound: null,
+      elapsed_seconds: null,
+      schedule: null,
+      objective_mode: 'makespan',
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(created)))
+
+    const { result } = renderHook(() => useCreateSolve(), { wrapper })
+    result.current.mutate({ problem_id: 'abc', time_limit_seconds: 30 })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toEqual(created)
+    const [request] = vi.mocked(fetch).mock.calls[0]
+    expect((request as Request).method).toBe('POST')
+  })
+})
+
+describe('useSolve', () => {
+  it('fetches a solve by id', async () => {
+    const solve = {
+      id: 'solve-1',
+      status: 'running',
+      best_objective: 42,
+      best_bound: 30,
+      elapsed_seconds: 5,
+      schedule: null,
+      objective_mode: 'makespan',
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(solve)))
+
+    const { result } = renderHook(() => useSolve('solve-1'), { wrapper })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toEqual(solve)
+    const [request] = vi.mocked(fetch).mock.calls[0]
+    expect((request as Request).url).toContain('/api/solves/solve-1')
   })
 })

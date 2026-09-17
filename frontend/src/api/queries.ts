@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import type { components } from './schema'
 
 type ProblemIn = components['schemas']['ProblemIn']
+type SolveCreate = components['schemas']['SolveCreate']
 
 export function usePresets() {
   return useQuery({
@@ -59,5 +60,33 @@ export function useUpdateProblem(id: string) {
       if (error || !data) throw error || new Error('Failed to update problem')
       return data
     },
+  })
+}
+
+export function getSolveRefetchInterval(status: string | undefined): number | false {
+  return status === 'pending' || status === 'running' ? 1000 : false
+}
+
+export function useCreateSolve() {
+  return useMutation({
+    mutationFn: async (payload: SolveCreate) => {
+      const { data, error } = await apiClient.POST('/api/solves', { body: payload })
+      if (error || !data) throw error || new Error('Failed to start solve')
+      return data
+    },
+  })
+}
+
+export function useSolve(id: string) {
+  return useQuery({
+    queryKey: ['solve', id],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET('/api/solves/{solve_id}', {
+        params: { path: { solve_id: id } },
+      })
+      if (error || !data) throw error || new Error('Failed to load solve')
+      return data
+    },
+    refetchInterval: (query) => getSolveRefetchInterval(query.state.data?.status),
   })
 }
