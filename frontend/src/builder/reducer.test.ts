@@ -143,6 +143,14 @@ describe('builderReducer', () => {
     expect(draft.jobs[0].weight).toBe(2)
   })
 
+  it('clearing a due date also clears its weight', () => {
+    let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: 10 })
+    draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: 3 })
+    draft = builderReducer(draft, { type: 'setJobDueDate', jobId: 'j1', dueDate: undefined })
+    expect(draft.jobs[0].dueDate).toBeUndefined()
+    expect(draft.jobs[0].weight).toBeUndefined()
+  })
+
   it('never mutates the input draft', () => {
     const draft = baseDraft()
     const result = builderReducer(draft, { type: 'setName', name: 'Renamed' })

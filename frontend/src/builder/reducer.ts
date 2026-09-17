@@ -98,7 +98,10 @@ export const builderReducer = produce((draft: BuilderDraft, action: BuilderActio
     }
     case 'setJobDueDate': {
       const job = draft.jobs.find((j) => j.id === action.jobId)
-      if (job) job.dueDate = action.dueDate
+      if (job) {
+        job.dueDate = action.dueDate
+        if (action.dueDate == null) job.weight = undefined
+      }
       break
     }
     case 'setJobWeight': {
