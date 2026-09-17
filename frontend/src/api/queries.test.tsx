@@ -120,6 +120,34 @@ describe('useCreateProblem', () => {
     const [request] = vi.mocked(fetch).mock.calls[0]
     expect((request as Request).method).toBe('POST')
   })
+
+  it('invalidates the problems list cache on success', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    queryClient.setQueryData(['problems'], [])
+    const localWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+    const created = {
+      id: 'new-id',
+      name: 'Demo',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(created)))
+
+    const { result } = renderHook(() => useCreateProblem(), { wrapper: localWrapper })
+    result.current.mutate({
+      name: 'Demo',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(queryClient.getQueryState(['problems'])?.isInvalidated).toBe(true)
+  })
 })
 
 describe('useUpdateProblem', () => {
@@ -147,6 +175,36 @@ describe('useUpdateProblem', () => {
     const [request] = vi.mocked(fetch).mock.calls[0]
     expect((request as Request).method).toBe('PUT')
     expect((request as Request).url).toContain('/api/problems/abc')
+  })
+
+  it('invalidates the problems list and this problem cache on success', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    queryClient.setQueryData(['problems'], [])
+    queryClient.setQueryData(['problem', 'abc'], {})
+    const localWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+    const updated = {
+      id: 'abc',
+      name: 'Renamed',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(updated)))
+
+    const { result } = renderHook(() => useUpdateProblem('abc'), { wrapper: localWrapper })
+    result.current.mutate({
+      name: 'Renamed',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(queryClient.getQueryState(['problems'])?.isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(['problem', 'abc'])?.isInvalidated).toBe(true)
   })
 })
 

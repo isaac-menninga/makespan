@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './client'
 import type { components } from './schema'
 
@@ -41,16 +41,21 @@ export function useProblem(id: string) {
 }
 
 export function useCreateProblem() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (problem: ProblemIn) => {
       const { data, error } = await apiClient.POST('/api/problems', { body: problem })
       if (error || !data) throw error || new Error('Failed to create problem')
       return data
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['problems'] })
+    },
   })
 }
 
 export function useUpdateProblem(id: string) {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (problem: ProblemIn) => {
       const { data, error } = await apiClient.PUT('/api/problems/{problem_id}', {
@@ -59,6 +64,10 @@ export function useUpdateProblem(id: string) {
       })
       if (error || !data) throw error || new Error('Failed to update problem')
       return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['problems'] })
+      queryClient.invalidateQueries({ queryKey: ['problem', id] })
     },
   })
 }
