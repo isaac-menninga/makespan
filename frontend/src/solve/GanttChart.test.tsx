@@ -1,0 +1,56 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it } from 'vitest'
+import { GanttChart } from './GanttChart'
+
+const schedule = [
+  { job_index: 0, operation_index: 0, machine_id: 'M1', start: 0, end: 5 },
+  { job_index: 1, operation_index: 0, machine_id: 'M2', start: 0, end: 3 },
+  { job_index: 0, operation_index: 1, machine_id: 'M2', start: 5, end: 8 },
+]
+
+describe('GanttChart', () => {
+  it('renders one bar per scheduled operation', () => {
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+    expect(screen.getByTestId('gantt-bar-0-0')).toBeInTheDocument()
+    expect(screen.getByTestId('gantt-bar-1-0')).toBeInTheDocument()
+    expect(screen.getByTestId('gantt-bar-0-1')).toBeInTheDocument()
+  })
+
+  it('renders a row label for every machine, including one with no scheduled operations', () => {
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2', 'M3']} />)
+    expect(screen.getByText('M3')).toBeInTheDocument()
+  })
+
+  it('dims other jobs while hovering one operation', async () => {
+    const user = userEvent.setup()
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    await user.hover(screen.getByTestId('gantt-bar-0-0'))
+
+    expect(screen.getByTestId('gantt-bar-0-0')).toHaveAttribute('opacity', '1')
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveAttribute('opacity', '1')
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveAttribute('opacity', '0.35')
+  })
+
+  it('pins a highlight on click that survives the mouse leaving', async () => {
+    const user = userEvent.setup()
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    await user.click(screen.getByTestId('gantt-bar-0-0'))
+    await user.unhover(screen.getByTestId('gantt-bar-0-0'))
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveAttribute('opacity', '1')
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveAttribute('opacity', '0.35')
+  })
+
+  it('unpins when the same bar is clicked again', async () => {
+    const user = userEvent.setup()
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    await user.click(screen.getByTestId('gantt-bar-0-0'))
+    await user.click(screen.getByTestId('gantt-bar-0-0'))
+
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveAttribute('opacity', '1')
+  })
+})
