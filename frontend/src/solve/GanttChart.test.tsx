@@ -53,4 +53,12 @@ describe('GanttChart', () => {
 
     expect(screen.getByTestId('gantt-bar-1-0')).toHaveAttribute('opacity', '1')
   })
+
+  it('renders a tooltip with the 1-based job/operation numbers, machine id, and start-end range', () => {
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Job 1, operation 2 on M2: 5–8',
+    )
+  })
 })

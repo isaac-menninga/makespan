@@ -108,6 +108,7 @@ function ExistingProblemBuilder({ id }: { id: string }) {
       saveErrors={saveErrors}
       onSave={(draft: BuilderDraft) => {
         setSaveErrors(undefined)
+        setSolveError(undefined)
         updateProblem.mutate(serialize(draft), {
           onSuccess: () => setSavedDraft(draft),
           onError: (error) => {

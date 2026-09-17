@@ -266,4 +266,39 @@ describe('BuilderPage', () => {
 
     expect(await screen.findByText(/couldn't start the solve/i)).toBeInTheDocument()
   })
+
+  it('clears a previous solve-start error once a save succeeds', async () => {
+    const user = userEvent.setup()
+    const problem = {
+      id: 'abc',
+      name: 'Demo',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((request: Request) => {
+        if (request.method === 'POST' && request.url.includes('/api/solves')) {
+          return Promise.resolve(jsonResponse({ detail: 'boom' }, 500))
+        }
+        if (request.method === 'PUT') {
+          return Promise.resolve(jsonResponse(problem))
+        }
+        return Promise.resolve(jsonResponse(problem))
+      }),
+    )
+
+    renderAt('/problems/abc')
+    await screen.findByLabelText('Problem name')
+
+    await user.click(screen.getByText('Solve'))
+    expect(await screen.findByText(/couldn't start the solve/i)).toBeInTheDocument()
+
+    await user.click(screen.getByText('Save'))
+    await waitFor(() => expect(screen.getByText('Save')).not.toBeDisabled())
+
+    expect(screen.queryByText(/couldn't start the solve/i)).not.toBeInTheDocument()
+  })
 })

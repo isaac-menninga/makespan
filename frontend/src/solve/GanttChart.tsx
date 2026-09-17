@@ -99,16 +99,14 @@ export function GanttChart({ schedule, machines }: GanttChartProps) {
           isDimmed={highlightedJob !== null && highlightedJob !== bar.jobIndex}
           onHover={setHoveredJob}
           onToggle={(jobIndex) => {
-            setPinnedJob((current) => {
-              if (current === jobIndex) {
-                // Unpinning: also clear hover state
-                setHoveredJob(null)
-                return null
-              } else {
-                // Pinning
-                return jobIndex
-              }
-            })
+            if (pinnedJob === jobIndex) {
+              // Unpinning: also clear hover state
+              setPinnedJob(null)
+              setHoveredJob(null)
+            } else {
+              // Pinning
+              setPinnedJob(jobIndex)
+            }
           }}
         />
       ))}
