@@ -19,8 +19,9 @@ export function GalleryPage() {
         <h2 className="text-lg font-medium text-slate-800">Presets</h2>
         {presets.isPending ? (
           <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <CardSkeleton />
-            <CardSkeleton />
+            {Array.from({ length: 4 }, (_, i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : presets.isError ? (
           <div className="mt-4 text-sm text-red-600">
@@ -56,7 +57,9 @@ export function GalleryPage() {
         </div>
         {savedProblems.isPending ? (
           <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <CardSkeleton />
+            {Array.from({ length: 4 }, (_, i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : savedProblems.isError ? (
           <div className="mt-4 text-sm text-red-600">
