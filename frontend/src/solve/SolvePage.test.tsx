@@ -91,6 +91,20 @@ describe('SolvePage', () => {
     expect(await screen.findByText(/weighted score: 15/i)).toBeInTheDocument()
   })
 
+  it('renders elapsed time as 0.0s when a completed solve has no elapsed_seconds', async () => {
+    stubFetch({
+      id: 's1',
+      status: 'completed',
+      best_objective: 5,
+      best_bound: 5,
+      elapsed_seconds: null,
+      schedule: [],
+      objective_mode: 'makespan',
+    })
+    renderAt('/problems/p1/solves/s1')
+    expect(await screen.findByText(/elapsed: 0\.0s/i)).toBeInTheDocument()
+  })
+
   it('shows the failure message with no Gantt when the solve failed', async () => {
     stubFetch({
       id: 's1',

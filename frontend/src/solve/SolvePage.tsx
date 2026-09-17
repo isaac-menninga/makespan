@@ -42,7 +42,7 @@ export function SolvePage() {
             <span>
               {objectiveLabel(solve.data.objective_mode)}: {solve.data.best_objective}
             </span>
-            <span>Elapsed: {solve.data.elapsed_seconds?.toFixed(1)}s</span>
+            <span>Elapsed: {(solve.data.elapsed_seconds ?? 0).toFixed(1)}s</span>
           </div>
           {problem.data ? (
             <GanttChart
