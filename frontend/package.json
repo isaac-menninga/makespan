@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "generate-types": "openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.ts"
+    "generate-types": "bash scripts/generate-types.sh",
+    "check-types-fresh": "bash scripts/check-types-fresh.sh"
   },
   "dependencies": {
     "react": "^19.0.0",

@@ -61,12 +61,19 @@ The Vite dev server proxies `/api/*` requests to `http://localhost:8000`,
 so open the URL Vite prints (typically `http://localhost:5173`) once both
 are running.
 
-After a backend schema change, regenerate the typed API client (requires
-the backend running):
+After a backend schema change, regenerate the typed API client:
 
 ```bash
 cd frontend
 npm run generate-types
+```
+
+To check whether `src/api/schema.ts` is stale (e.g. after pulling backend
+changes) without regenerating it:
+
+```bash
+cd frontend
+npm run check-types-fresh
 ```
 
 Frontend checks:
