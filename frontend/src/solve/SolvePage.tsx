@@ -15,7 +15,7 @@ export function SolvePage() {
   const solve = useSolve(solveId!)
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-8">
+    <main className="mx-auto max-w-(--content-max-width) space-y-6 p-8">
       <div className="flex items-center justify-between">
         <Link to={`/problems/${id}`} className="text-sm text-accent hover:underline">
           ← Back to Builder
