@@ -27,6 +27,9 @@ type BuilderFormProps = {
   isSaving: boolean
   justSaved?: boolean
   saveErrors?: ValidationResult
+  onSolve?: () => void
+  isStartingSolve?: boolean
+  solveError?: string
 }
 
 export function BuilderForm({
@@ -37,9 +40,13 @@ export function BuilderForm({
   isSaving,
   justSaved,
   saveErrors,
+  onSolve,
+  isStartingSolve,
+  solveError,
 }: BuilderFormProps) {
   const [draft, dispatch] = useReducer(builderReducer, initialDraft)
   const isDirty = JSON.stringify(draft) !== JSON.stringify(savedDraft)
+  const canSolve = Boolean(onSolve) && !isDirty
   const blocker = useBlocker(isDirty)
   const validation = useMemo(() => validateDraft(draft), [draft])
   const usage = useMemo(() => getMachineUsage(draft), [draft])
@@ -55,6 +62,9 @@ export function BuilderForm({
         canSave={validation.isValid}
         isSaving={isSaving}
         justSaved={justSaved}
+        onSolve={onSolve}
+        canSolve={canSolve}
+        isStartingSolve={isStartingSolve ?? false}
       />
 
       {errors.problemErrors.length > 0 ? (
@@ -63,6 +73,10 @@ export function BuilderForm({
             <p key={message}>{message}</p>
           ))}
         </div>
+      ) : null}
+
+      {solveError ? (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{solveError}</div>
       ) : null}
 
       <MachineList

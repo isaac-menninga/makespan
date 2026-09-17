@@ -120,6 +120,36 @@ describe('BuilderForm', () => {
     expect(screen.getByText('Something went wrong on the server.')).toBeInTheDocument()
   })
 
+  it('disables Solve when onSolve is not provided (e.g. an unsaved new problem)', () => {
+    renderBuilderForm()
+    expect(screen.getByText('Solve')).toBeDisabled()
+  })
+
+  it('disables Solve while there are unsaved changes', async () => {
+    const user = userEvent.setup()
+    renderBuilderForm({ onSolve: vi.fn() })
+    await user.type(screen.getByLabelText('Machine name'), 'M1')
+    expect(screen.getByText('Solve')).toBeDisabled()
+  })
+
+  it('enables Solve and calls onSolve when the draft is clean', async () => {
+    const user = userEvent.setup()
+    const onSolve = vi.fn()
+    renderBuilderForm({
+      initialDraft: draftWithTwoMachines(),
+      savedDraft: draftWithTwoMachines(),
+      onSolve,
+    })
+    expect(screen.getByText('Solve')).not.toBeDisabled()
+    await user.click(screen.getByText('Solve'))
+    expect(onSolve).toHaveBeenCalled()
+  })
+
+  it('shows a solve-start error when provided', () => {
+    renderBuilderForm({ solveError: "Couldn't start the solve. Try again." })
+    expect(screen.getByText("Couldn't start the solve. Try again.")).toBeInTheDocument()
+  })
+
   it('blocks navigation with a confirm prompt when there are unsaved changes', async () => {
     const user = userEvent.setup()
     const { router } = renderBuilderForm()

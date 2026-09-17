@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router'
-import { useCreateProblem, useProblem, useUpdateProblem } from '../api/queries'
+import { useCreateProblem, useCreateSolve, useProblem, useUpdateProblem } from '../api/queries'
 import { BuilderForm, createEmptyDraft } from './BuilderForm'
 import { hydrate, serialize } from './transform'
 import { mapValidationErrors, type FastAPIValidationError } from './mapValidationErrors'
@@ -62,6 +62,8 @@ function ExistingProblemBuilder({ id }: { id: string }) {
   const updateProblem = useUpdateProblem(id)
   const [saveErrors, setSaveErrors] = useState<ValidationResult>()
   const [savedDraft, setSavedDraft] = useState<BuilderDraft>()
+  const createSolve = useCreateSolve()
+  const [solveError, setSolveError] = useState<string>()
 
   // Memoized on problem.data's reference (TanStack Query keeps the same
   // reference across re-renders when the underlying data hasn't changed) so
@@ -115,6 +117,18 @@ function ExistingProblemBuilder({ id }: { id: string }) {
           },
         })
       }}
+      onSolve={() => {
+        setSolveError(undefined)
+        createSolve.mutate(
+          { problem_id: id, time_limit_seconds: 30 },
+          {
+            onSuccess: (solve) => navigate(`/problems/${id}/solves/${solve.id}`),
+            onError: () => setSolveError("Couldn't start the solve. Try again."),
+          },
+        )
+      }}
+      isStartingSolve={createSolve.isPending}
+      solveError={solveError}
     />
   )
 }

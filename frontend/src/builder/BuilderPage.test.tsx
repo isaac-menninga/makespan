@@ -16,6 +16,7 @@ function renderAt(path: string) {
     [
       { path: '/problems/new', element: <BuilderPage /> },
       { path: '/problems/:id', element: <BuilderPage /> },
+      { path: '/problems/:id/solves/:solveId', element: <p>Solve View</p> },
       { path: '/other', element: <p>Elsewhere</p> },
     ],
     { initialEntries: [path] },
@@ -199,5 +200,70 @@ describe('BuilderPage', () => {
       ).toBe(true),
     )
     expect(await screen.findByLabelText('Problem name')).toBeInTheDocument()
+  })
+
+  it('starts a solve and navigates to the solve view', async () => {
+    const user = userEvent.setup()
+    const problem = {
+      id: 'abc',
+      name: 'Demo',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    const createdSolve = {
+      id: 'solve-1',
+      status: 'pending',
+      best_objective: null,
+      best_bound: null,
+      elapsed_seconds: null,
+      schedule: null,
+      objective_mode: 'makespan',
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((request: Request) =>
+        Promise.resolve(
+          request.method === 'POST' && request.url.includes('/api/solves')
+            ? jsonResponse(createdSolve, 202)
+            : jsonResponse(problem),
+        ),
+      ),
+    )
+
+    const { router } = renderAt('/problems/abc')
+    await screen.findByLabelText('Problem name')
+    await user.click(screen.getByText('Solve'))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/problems/abc/solves/solve-1'))
+  })
+
+  it('shows an error near the Solve button when starting a solve fails', async () => {
+    const user = userEvent.setup()
+    const problem = {
+      id: 'abc',
+      name: 'Demo',
+      created_at: '2026-01-01T00:00:00Z',
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }] }],
+      constraints: {},
+    }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((request: Request) =>
+        Promise.resolve(
+          request.method === 'POST' && request.url.includes('/api/solves')
+            ? jsonResponse({ detail: 'boom' }, 500)
+            : jsonResponse(problem),
+        ),
+      ),
+    )
+
+    renderAt('/problems/abc')
+    await screen.findByLabelText('Problem name')
+    await user.click(screen.getByText('Solve'))
+
+    expect(await screen.findByText(/couldn't start the solve/i)).toBeInTheDocument()
   })
 })
