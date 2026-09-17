@@ -61,7 +61,7 @@ export function BuilderForm({
         onSave={() => onSave(draft)}
         canSave={validation.isValid}
         isSaving={isSaving}
-        justSaved={justSaved}
+        justSaved={justSaved && !isDirty}
         onSolve={onSolve}
         canSolve={canSolve}
         isStartingSolve={isStartingSolve ?? false}

@@ -150,6 +150,19 @@ describe('BuilderForm', () => {
     expect(screen.getByText("Couldn't start the solve. Try again.")).toBeInTheDocument()
   })
 
+  it('hides the "Saved" badge once the draft becomes dirty again', async () => {
+    const user = userEvent.setup()
+    renderBuilderForm({
+      initialDraft: draftWithTwoMachines(),
+      savedDraft: draftWithTwoMachines(),
+      justSaved: true,
+    })
+    expect(screen.getByText('Saved')).toBeInTheDocument()
+
+    await user.type(screen.getAllByLabelText('Machine name')[0], 'x')
+    expect(screen.queryByText('Saved')).not.toBeInTheDocument()
+  })
+
   it('blocks navigation with a confirm prompt when there are unsaved changes', async () => {
     const user = userEvent.setup()
     const { router } = renderBuilderForm()
