@@ -13,17 +13,18 @@
     "check-types-fresh": "bash scripts/check-types-fresh.sh"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router": "^8.0.0",
-    "@tanstack/react-query": "^5.0.0",
-    "openapi-fetch": "^0.17.0"
+    "react-router": "^8.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.0.0",
+    "@types/node": "^22.20.3",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
