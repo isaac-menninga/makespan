@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "generate-types": "bash scripts/generate-types.sh",
+    "generate-types": "(cd .. && uv run python -c \"import json; from makespan.main import app; print(json.dumps(app.openapi()))\") | openapi-typescript /dev/stdin -o src/api/schema.ts",
     "check-types-fresh": "bash scripts/check-types-fresh.sh"
   },
   "dependencies": {
