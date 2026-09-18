@@ -49,6 +49,9 @@ export function SolvePage() {
               schedule={(solve.data.schedule ?? []) as ScheduledOperationApi[]}
               machines={problem.data.machines}
               jobNames={problem.data.jobs.map((job) => job.name ?? undefined)}
+              operationNames={problem.data.jobs.map((job) =>
+                job.operations.map((operation) => operation.name ?? undefined),
+              )}
             />
           ) : (
             <p className="text-slate-500">Loading chart…</p>

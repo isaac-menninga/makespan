@@ -17,7 +17,7 @@ export type BuilderAction =
       type: 'updateOperation'
       jobId: string
       operationId: string
-      field: 'machineId' | 'duration'
+      field: 'machineId' | 'duration' | 'name'
       value: string
     }
   | { type: 'setJobDueDate'; jobId: string; dueDate: string | undefined }
@@ -92,8 +92,10 @@ export const builderReducer = produce((draft: BuilderDraft, action: BuilderActio
       if (!operation) break
       if (action.field === 'machineId') {
         operation.machineId = action.value
-      } else {
+      } else if (action.field === 'duration') {
         operation.duration = action.value
+      } else {
+        operation.name = action.value === '' ? undefined : action.value
       }
       break
     }

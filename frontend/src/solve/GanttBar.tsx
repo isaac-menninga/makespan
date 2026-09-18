@@ -9,6 +9,7 @@ type GanttBarProps = {
   color: string
   isDimmed: boolean
   jobLabel: string
+  operationLabel: string
   onHover: (jobIndex: number | null) => void
   onToggle: (jobIndex: number) => void
 }
@@ -22,6 +23,7 @@ export function GanttBar({
   color,
   isDimmed,
   jobLabel,
+  operationLabel,
   onHover,
   onToggle,
 }: GanttBarProps) {
@@ -41,7 +43,7 @@ export function GanttBar({
       onClick={() => onToggle(bar.jobIndex)}
     >
       <title>
-        {`${jobLabel}, operation ${bar.operationIndex + 1} on ${bar.machineId}: ${bar.start}–${bar.end}`}
+        {`${jobLabel}, ${operationLabel} on ${bar.machineId}: ${bar.start}–${bar.end}`}
       </title>
     </rect>
   )

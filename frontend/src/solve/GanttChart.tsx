@@ -52,9 +52,10 @@ type GanttChartProps = {
   schedule: ScheduledOperationApi[]
   machines: string[]
   jobNames?: (string | undefined)[]
+  operationNames?: (string | undefined)[][]
 }
 
-export function GanttChart({ schedule, machines, jobNames }: GanttChartProps) {
+export function GanttChart({ schedule, machines, jobNames, operationNames }: GanttChartProps) {
   const [hoveredJob, setHoveredJob] = useState<number | null>(null)
   const [pinnedJob, setPinnedJob] = useState<number | null>(null)
   const highlightedJob = pinnedJob ?? hoveredJob
@@ -121,6 +122,10 @@ export function GanttChart({ schedule, machines, jobNames }: GanttChartProps) {
             color={colorForJob(bar.jobIndex)}
             isDimmed={highlightedJob !== null && highlightedJob !== bar.jobIndex}
             jobLabel={jobNames?.[bar.jobIndex]?.trim() || `Job ${bar.jobIndex + 1}`}
+            operationLabel={
+              operationNames?.[bar.jobIndex]?.[bar.operationIndex]?.trim() ||
+              `operation ${bar.operationIndex + 1}`
+            }
             onHover={setHoveredJob}
             onToggle={(jobIndex) => {
               if (pinnedJob === jobIndex) {

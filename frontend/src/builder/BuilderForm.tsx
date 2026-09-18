@@ -124,6 +124,15 @@ export function BuilderForm({
                   value: duration,
                 })
               }
+              onSetOperationName={(operationId, name) =>
+                dispatch({
+                  type: 'updateOperation',
+                  jobId: job.id,
+                  operationId,
+                  field: 'name',
+                  value: name,
+                })
+              }
               onSetDueDate={(dueDate) => dispatch({ type: 'setJobDueDate', jobId: job.id, dueDate })}
               onSetWeight={(weight) => dispatch({ type: 'setJobWeight', jobId: job.id, weight })}
               onSetName={(name) => dispatch({ type: 'setJobName', jobId: job.id, name })}

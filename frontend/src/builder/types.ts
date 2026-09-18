@@ -2,7 +2,7 @@ import type { components } from '../api/schema'
 
 type ApiOperation = components['schemas']['Operation']
 
-export type OperationDraft = Omit<ApiOperation, 'machine_id' | 'duration'> & {
+export type OperationDraft = Omit<ApiOperation, 'machine_id' | 'duration' | 'name'> & {
   id: string
   /** References a MachineDraft.id — never a machine name. */
   machineId: string
@@ -14,6 +14,7 @@ export type OperationDraft = Omit<ApiOperation, 'machine_id' | 'duration'> & {
    * API-serialization boundary.
    */
   duration: string
+  name?: string
 }
 
 export type JobDraft = {

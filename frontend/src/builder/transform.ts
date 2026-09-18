@@ -13,7 +13,10 @@ type ApiProblemIn = components['schemas']['ProblemIn']
 
 type ProblemSpecLike = {
   machines: string[]
-  jobs: { operations: { machine_id: string; duration: number }[]; name?: string | null }[]
+  jobs: {
+    operations: { machine_id: string; duration: number; name?: string | null }[]
+    name?: string | null
+  }[]
   constraints?: {
     setup_times?: Record<string, number>
     due_dates?: { job_index: number; due: number; weight: number }[]
@@ -34,6 +37,7 @@ export function hydrateSpec(
         id: generateId(),
         machineId: machineIdByName.get(operation.machine_id) ?? operation.machine_id,
         duration: String(operation.duration),
+        name: operation.name ?? undefined,
       }),
     ),
     name: job.name ?? undefined,
@@ -103,6 +107,7 @@ export function serialize(draft: BuilderDraft): ApiProblemIn {
       operations: job.operations.map((operation) => ({
         machine_id: machineNameById.get(operation.machineId) ?? operation.machineId,
         duration: Number(operation.duration),
+        name: operation.name,
       })),
       name: job.name,
     })),

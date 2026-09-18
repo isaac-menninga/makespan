@@ -136,6 +136,26 @@ describe('builderReducer', () => {
     expect(result.jobs[0].operations[0].duration).toBe('07')
   })
 
+  it('updateOperation sets the name, and an empty string clears it back to undefined', () => {
+    let draft = builderReducer(baseDraft(), {
+      type: 'updateOperation',
+      jobId: 'j1',
+      operationId: 'o1',
+      field: 'name',
+      value: 'Grind coffee',
+    })
+    expect(draft.jobs[0].operations[0].name).toBe('Grind coffee')
+
+    draft = builderReducer(draft, {
+      type: 'updateOperation',
+      jobId: 'j1',
+      operationId: 'o1',
+      field: 'name',
+      value: '',
+    })
+    expect(draft.jobs[0].operations[0].name).toBeUndefined()
+  })
+
   it('setJobDueDate and setJobWeight update the targeted job', () => {
     let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: '10' })
     draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: '2' })

@@ -12,6 +12,7 @@ type JobCardProps = {
   onReorderOperation: (operationId: string, direction: 'up' | 'down') => void
   onChangeOperationMachine: (operationId: string, machineId: string) => void
   onChangeOperationDuration: (operationId: string, duration: string) => void
+  onSetOperationName: (operationId: string, name: string) => void
   onSetDueDate: (dueDate: string | undefined) => void
   onSetWeight: (weight: string | undefined) => void
   onSetName: (name: string) => void
@@ -29,6 +30,7 @@ export function JobCard({
   onReorderOperation,
   onChangeOperationMachine,
   onChangeOperationDuration,
+  onSetOperationName,
   onSetDueDate,
   onSetWeight,
   onSetName,
@@ -72,6 +74,7 @@ export function JobCard({
             canRemove={job.operations.length > 1}
             onChangeMachine={(machineId) => onChangeOperationMachine(operation.id, machineId)}
             onChangeDuration={(duration) => onChangeOperationDuration(operation.id, duration)}
+            onSetName={(name) => onSetOperationName(operation.id, name)}
             onMoveUp={() => onReorderOperation(operation.id, 'up')}
             onMoveDown={() => onReorderOperation(operation.id, 'down')}
             onRemove={() => onRemoveOperation(operation.id)}

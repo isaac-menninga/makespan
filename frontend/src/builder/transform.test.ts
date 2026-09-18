@@ -85,6 +85,14 @@ describe('hydrateSpec', () => {
     })
     expect(draft.jobs[0].name).toBe('Rush order')
   })
+
+  it('hydrateSpec carries an operation name through', () => {
+    const draft = hydrateSpec({
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1, name: 'Grind coffee' }] }],
+    })
+    expect(draft.jobs[0].operations[0].name).toBe('Grind coffee')
+  })
 })
 
 describe('hydrate', () => {
@@ -180,6 +188,27 @@ describe('serialize', () => {
     const result = serialize(draft_input)
     expect(result.jobs[0].name).toBe('Rush order')
     expect(result.jobs[1].name).toBeUndefined()
+  })
+
+  it('serialize includes an operation name when set, and omits it when unset', () => {
+    const draft_input: BuilderDraft = {
+      name: 'Demo',
+      machines: [{ id: 'm1', name: 'M1' }],
+      jobs: [
+        {
+          id: 'j1',
+          operations: [
+            { id: 'o1', machineId: 'm1', duration: '1', name: 'Grind coffee' },
+            { id: 'o2', machineId: 'm1', duration: '1' },
+          ],
+        },
+      ],
+      setupTimes: {},
+      downtimeWindows: [],
+    }
+    const result = serialize(draft_input)
+    expect(result.jobs[0].operations[0].name).toBe('Grind coffee')
+    expect(result.jobs[0].operations[1].name).toBeUndefined()
   })
 })
 
