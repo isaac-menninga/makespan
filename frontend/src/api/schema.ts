@@ -170,6 +170,8 @@ export interface components {
         Job: {
             /** Operations */
             operations: components["schemas"]["Operation"][];
+            /** Name */
+            name?: string | null;
         };
         /** Operation */
         Operation: {
