@@ -8,7 +8,7 @@ type OperationRowProps = {
   canMoveDown: boolean
   canRemove: boolean
   onChangeMachine: (machineId: string) => void
-  onChangeDuration: (duration: number) => void
+  onChangeDuration: (duration: string) => void
   onMoveUp: () => void
   onMoveDown: () => void
   onRemove: () => void
@@ -43,9 +43,10 @@ export function OperationRow({
         ))}
       </select>
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
         value={operation.duration}
-        onChange={(e) => onChangeDuration(Number(e.target.value))}
+        onChange={(e) => onChangeDuration(e.target.value)}
         aria-label="Duration"
         className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm"
       />

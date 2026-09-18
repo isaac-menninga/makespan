@@ -6,7 +6,7 @@ function validDraft(): BuilderDraft {
   return {
     name: 'Demo',
     machines: [{ id: 'm1', name: 'M1' }],
-    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
     setupTimes: {},
     downtimeWindows: [],
   }
@@ -60,22 +60,31 @@ describe('validateDraft', () => {
 
   it('rejects an operation with duration <= 0', () => {
     const draft = validDraft()
-    draft.jobs[0].operations[0].duration = 0
+    draft.jobs[0].operations[0].duration = '0'
     const result = validateDraft(draft)
     expect(result.isValid).toBe(false)
     expect(result.jobErrors.j1?.operationErrors?.o1).toBeTruthy()
   })
 
+  it('rejects an operation whose duration is empty or non-numeric text', () => {
+    const draft = validDraft()
+    draft.jobs[0].operations[0].duration = ''
+    expect(validateDraft(draft).isValid).toBe(false)
+
+    draft.jobs[0].operations[0].duration = 'abc'
+    expect(validateDraft(draft).isValid).toBe(false)
+  })
+
   it('rejects a negative due date', () => {
     const draft = validDraft()
-    draft.jobs[0].dueDate = -1
+    draft.jobs[0].dueDate = '-1'
     expect(validateDraft(draft).isValid).toBe(false)
   })
 
   it('rejects a weight below 1', () => {
     const draft = validDraft()
-    draft.jobs[0].dueDate = 5
-    draft.jobs[0].weight = 0
+    draft.jobs[0].dueDate = '5'
+    draft.jobs[0].weight = '0'
     expect(validateDraft(draft).isValid).toBe(false)
   })
 

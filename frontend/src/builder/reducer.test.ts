@@ -6,7 +6,7 @@ function baseDraft(): BuilderDraft {
   return {
     name: 'Demo',
     machines: [{ id: 'm1', name: 'M1' }],
-    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
     setupTimes: {},
     downtimeWindows: [],
   }
@@ -125,27 +125,27 @@ describe('builderReducer', () => {
     expect(result.jobs[0].operations[0].machineId).toBe('m2')
   })
 
-  it('updateOperation updates the duration', () => {
+  it('updateOperation updates the duration, keeping the raw typed text', () => {
     const result = builderReducer(baseDraft(), {
       type: 'updateOperation',
       jobId: 'j1',
       operationId: 'o1',
       field: 'duration',
-      value: 7,
+      value: '07',
     })
-    expect(result.jobs[0].operations[0].duration).toBe(7)
+    expect(result.jobs[0].operations[0].duration).toBe('07')
   })
 
   it('setJobDueDate and setJobWeight update the targeted job', () => {
-    let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: 10 })
-    draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: 2 })
-    expect(draft.jobs[0].dueDate).toBe(10)
-    expect(draft.jobs[0].weight).toBe(2)
+    let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: '10' })
+    draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: '2' })
+    expect(draft.jobs[0].dueDate).toBe('10')
+    expect(draft.jobs[0].weight).toBe('2')
   })
 
   it('clearing a due date also clears its weight', () => {
-    let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: 10 })
-    draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: 3 })
+    let draft = builderReducer(baseDraft(), { type: 'setJobDueDate', jobId: 'j1', dueDate: '10' })
+    draft = builderReducer(draft, { type: 'setJobWeight', jobId: 'j1', weight: '3' })
     draft = builderReducer(draft, { type: 'setJobDueDate', jobId: 'j1', dueDate: undefined })
     expect(draft.jobs[0].dueDate).toBeUndefined()
     expect(draft.jobs[0].weight).toBeUndefined()

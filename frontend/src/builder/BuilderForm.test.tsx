@@ -35,7 +35,7 @@ function draftWithTwoMachines(): BuilderDraft {
       { id: 'm1', name: 'M1' },
       { id: 'm2', name: 'M2' },
     ],
-    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
     setupTimes: {},
     downtimeWindows: [],
   }

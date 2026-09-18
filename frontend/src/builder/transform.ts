@@ -33,7 +33,7 @@ export function hydrateSpec(
       (operation): OperationDraft => ({
         id: generateId(),
         machineId: machineIdByName.get(operation.machine_id) ?? operation.machine_id,
-        duration: operation.duration,
+        duration: String(operation.duration),
       }),
     ),
     name: job.name ?? undefined,
@@ -42,8 +42,8 @@ export function hydrateSpec(
   for (const dueDate of spec.constraints?.due_dates ?? []) {
     const job = jobs[dueDate.job_index]
     if (job) {
-      job.dueDate = dueDate.due
-      job.weight = dueDate.weight
+      job.dueDate = String(dueDate.due)
+      job.weight = String(dueDate.weight)
     }
   }
 
@@ -81,7 +81,13 @@ export function serialize(draft: BuilderDraft): ApiProblemIn {
 
   const dueDates = draft.jobs.flatMap((job, jobIndex) =>
     job.dueDate != null
-      ? [{ job_index: jobIndex, due: job.dueDate, weight: job.weight ?? 1 }]
+      ? [
+          {
+            job_index: jobIndex,
+            due: Number(job.dueDate),
+            weight: job.weight != null ? Number(job.weight) : 1,
+          },
+        ]
       : [],
   )
 
@@ -96,7 +102,7 @@ export function serialize(draft: BuilderDraft): ApiProblemIn {
     jobs: draft.jobs.map((job) => ({
       operations: job.operations.map((operation) => ({
         machine_id: machineNameById.get(operation.machineId) ?? operation.machineId,
-        duration: operation.duration,
+        duration: Number(operation.duration),
       })),
       name: job.name,
     })),

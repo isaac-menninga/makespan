@@ -11,9 +11,9 @@ type JobCardProps = {
   onRemoveOperation: (operationId: string) => void
   onReorderOperation: (operationId: string, direction: 'up' | 'down') => void
   onChangeOperationMachine: (operationId: string, machineId: string) => void
-  onChangeOperationDuration: (operationId: string, duration: number) => void
-  onSetDueDate: (dueDate: number | undefined) => void
-  onSetWeight: (weight: number | undefined) => void
+  onChangeOperationDuration: (operationId: string, duration: string) => void
+  onSetDueDate: (dueDate: string | undefined) => void
+  onSetWeight: (weight: string | undefined) => void
   onSetName: (name: string) => void
   onRemoveJob: () => void
 }
@@ -91,18 +91,20 @@ export function JobCard({
         <label className="flex items-center gap-1">
           Due date
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={job.dueDate ?? ''}
-            onChange={(e) => onSetDueDate(e.target.value === '' ? undefined : Number(e.target.value))}
+            onChange={(e) => onSetDueDate(e.target.value === '' ? undefined : e.target.value)}
             className="w-20 rounded-md border border-slate-300 px-2 py-1"
           />
         </label>
         <label className="flex items-center gap-1">
           Weight
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={job.weight ?? ''}
-            onChange={(e) => onSetWeight(e.target.value === '' ? undefined : Number(e.target.value))}
+            onChange={(e) => onSetWeight(e.target.value === '' ? undefined : e.target.value)}
             disabled={job.dueDate == null}
             className="w-16 rounded-md border border-slate-300 px-2 py-1 disabled:bg-slate-100"
           />
