@@ -179,6 +179,8 @@ export interface components {
             machine_id: string;
             /** Duration */
             duration: number;
+            /** Name */
+            name?: string | null;
         };
         /** ProblemIn */
         ProblemIn: {
