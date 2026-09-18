@@ -16,3 +16,15 @@ class TestRequest extends OriginalRequest {
   }
 }
 globalThis.Request = TestRequest as unknown as typeof Request
+
+// jsdom (this project's test environment) doesn't implement ResizeObserver.
+// This stub's observe() never fires a callback, so GanttChart falls back to
+// its initial getBoundingClientRect() read (all-zero under jsdom), clamping
+// to MIN_PLOT_WIDTH in every test — no per-test mocking needed since no
+// existing test asserts on exact pixel positions.
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver

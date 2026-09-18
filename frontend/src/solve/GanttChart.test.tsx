@@ -78,4 +78,13 @@ describe('GanttChart', () => {
       'Job 2, operation 1 on M2: 0–3',
     )
   })
+
+  it('clamps the plot width to MIN_PLOT_WIDTH when the container reports zero width (jsdom default)', () => {
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    const svg = screen.getByRole('img', { name: 'Solve schedule Gantt chart' })
+    const viewBox = svg.getAttribute('viewBox')
+    // width = LEFT_MARGIN (120) + MIN_PLOT_WIDTH (300) + RIGHT_MARGIN (20) = 440
+    expect(viewBox).toMatch(/^0 0 440 /)
+  })
 })
