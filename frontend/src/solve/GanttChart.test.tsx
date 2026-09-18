@@ -61,4 +61,84 @@ describe('GanttChart', () => {
       'Job 1, operation 2 on M2: 5–8',
     )
   })
+
+  it('uses a provided job name in the tooltip instead of "Job N"', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        jobNames={['Rush order', undefined]}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Rush order, operation 2 on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, operation 1 on M2: 0–3',
+    )
+  })
+
+  it('falls back to "Job N" when a job name is an empty or whitespace-only string', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        jobNames={['', '   ']}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Job 1, operation 2 on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, operation 1 on M2: 0–3',
+    )
+  })
+
+  it('uses a provided operation name in the tooltip instead of "operation N"', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        operationNames={[[undefined, 'Grind coffee'], ['Boil water']]}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Job 1, Grind coffee on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, Boil water on M2: 0–3',
+    )
+  })
+
+  it('falls back to "operation N" when an operation name is empty, whitespace-only, or absent', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        operationNames={[['', '   ']]}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-0')).toHaveTextContent(
+      'Job 1, operation 1 on M1: 0–5',
+    )
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Job 1, operation 2 on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, operation 1 on M2: 0–3',
+    )
+  })
+
+  it('clamps the plot width to MIN_PLOT_WIDTH when the container reports zero width (jsdom default)', () => {
+    render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
+
+    const svg = screen.getByRole('img', { name: 'Solve schedule Gantt chart' })
+    const viewBox = svg.getAttribute('viewBox')
+    // width = LEFT_MARGIN (120) + MIN_PLOT_WIDTH (300) + RIGHT_MARGIN (20) = 440
+    expect(viewBox).toMatch(/^0 0 440 /)
+  })
 })

@@ -32,3 +32,35 @@ def test_unknown_machine_reference_raises():
             machines=["M1"],
             jobs=[Job(operations=[Operation(machine_id="M2", duration=3)])],
         )
+
+
+def test_job_name_defaults_to_none():
+    job = Job(operations=[Operation(machine_id="M1", duration=1)])
+    assert job.name is None
+
+
+def test_job_name_roundtrips_through_problem_spec():
+    problem = ProblemSpec(
+        machines=["M1"],
+        jobs=[Job(operations=[Operation(machine_id="M1", duration=1)], name="Rush order")],
+    )
+    assert problem.jobs[0].name == "Rush order"
+
+
+def test_operation_name_defaults_to_none():
+    operation = Operation(machine_id="M1", duration=1)
+    assert operation.name is None
+
+
+def test_operation_name_roundtrips_through_problem_spec():
+    problem = ProblemSpec(
+        machines=["M1"],
+        jobs=[
+            Job(
+                operations=[
+                    Operation(machine_id="M1", duration=1, name="Grind coffee"),
+                ]
+            )
+        ],
+    )
+    assert problem.jobs[0].operations[0].name == "Grind coffee"

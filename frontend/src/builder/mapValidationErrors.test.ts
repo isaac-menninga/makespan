@@ -6,7 +6,7 @@ function draft(): BuilderDraft {
   return {
     name: 'Demo',
     machines: [{ id: 'm1', name: 'M1' }],
-    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
     setupTimes: {},
     downtimeWindows: [],
   }

@@ -17,14 +17,15 @@ export type BuilderAction =
       type: 'updateOperation'
       jobId: string
       operationId: string
-      field: 'machineId' | 'duration'
-      value: string | number
+      field: 'machineId' | 'duration' | 'name'
+      value: string
     }
-  | { type: 'setJobDueDate'; jobId: string; dueDate: number | undefined }
-  | { type: 'setJobWeight'; jobId: string; weight: number | undefined }
+  | { type: 'setJobDueDate'; jobId: string; dueDate: string | undefined }
+  | { type: 'setJobWeight'; jobId: string; weight: string | undefined }
+  | { type: 'setJobName'; jobId: string; name: string }
 
 export function newOperation(machineId: string): OperationDraft {
-  return { id: generateId(), machineId, duration: 1 }
+  return { id: generateId(), machineId, duration: '1' }
 }
 
 export function newJob(machineId: string): JobDraft {
@@ -90,9 +91,11 @@ export const builderReducer = produce((draft: BuilderDraft, action: BuilderActio
       const operation = job?.operations.find((op) => op.id === action.operationId)
       if (!operation) break
       if (action.field === 'machineId') {
-        operation.machineId = String(action.value)
+        operation.machineId = action.value
+      } else if (action.field === 'duration') {
+        operation.duration = action.value
       } else {
-        operation.duration = Number(action.value)
+        operation.name = action.value === '' ? undefined : action.value
       }
       break
     }
@@ -107,6 +110,11 @@ export const builderReducer = produce((draft: BuilderDraft, action: BuilderActio
     case 'setJobWeight': {
       const job = draft.jobs.find((j) => j.id === action.jobId)
       if (job) job.weight = action.weight
+      break
+    }
+    case 'setJobName': {
+      const job = draft.jobs.find((j) => j.id === action.jobId)
+      if (job) job.name = action.name === '' ? undefined : action.name
       break
     }
     default: {

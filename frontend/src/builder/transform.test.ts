@@ -24,7 +24,7 @@ describe('hydrateSpec', () => {
     expect(draft.jobs[0].operations[0].machineId).toBe(draft.machines[0].id)
   })
 
-  it('maps due_dates onto the job at that index', () => {
+  it('maps due_dates onto the job at that index, converted to strings', () => {
     const draft = hydrateSpec({
       machines: ['M1'],
       jobs: [
@@ -35,8 +35,17 @@ describe('hydrateSpec', () => {
     })
 
     expect(draft.jobs[0].dueDate).toBeUndefined()
-    expect(draft.jobs[1].dueDate).toBe(10)
-    expect(draft.jobs[1].weight).toBe(2)
+    expect(draft.jobs[1].dueDate).toBe('10')
+    expect(draft.jobs[1].weight).toBe('2')
+  })
+
+  it('converts operation duration to a string', () => {
+    const draft = hydrateSpec({
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 3 }] }],
+    })
+
+    expect(draft.jobs[0].operations[0].duration).toBe('3')
   })
 
   it('converts setup_times and downtime_windows to machine-id keys', () => {
@@ -68,6 +77,22 @@ describe('hydrateSpec', () => {
     expect(draft.jobs[0].operations[0].machineId).toBe('M2')
     expect(draft.setupTimes).toEqual({ M2: 5 })
   })
+
+  it('hydrateSpec carries a job name through', () => {
+    const draft = hydrateSpec({
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }], name: 'Rush order' }],
+    })
+    expect(draft.jobs[0].name).toBe('Rush order')
+  })
+
+  it('hydrateSpec carries an operation name through', () => {
+    const draft = hydrateSpec({
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1, name: 'Grind coffee' }] }],
+    })
+    expect(draft.jobs[0].operations[0].name).toBe('Grind coffee')
+  })
 })
 
 describe('hydrate', () => {
@@ -90,7 +115,7 @@ describe('serialize', () => {
     return {
       name: 'Demo',
       machines: [{ id: 'm1', name: 'M1' }],
-      jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+      jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
       setupTimes: {},
       downtimeWindows: [],
       ...overrides,
@@ -102,16 +127,21 @@ describe('serialize', () => {
     expect(result.jobs[0].operations[0].machine_id).toBe('M1')
   })
 
-  it('computes due_dates from job order and the dueDate/weight fields', () => {
+  it('converts operation duration back to a number', () => {
+    const result = serialize(draft())
+    expect(result.jobs[0].operations[0].duration).toBe(3)
+  })
+
+  it('computes due_dates from job order and the dueDate/weight fields, converted to numbers', () => {
     const result = serialize(
       draft({
         jobs: [
-          { id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 1 }] },
+          { id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '1' }] },
           {
             id: 'j2',
-            operations: [{ id: 'o2', machineId: 'm1', duration: 1 }],
-            dueDate: 10,
-            weight: 3,
+            operations: [{ id: 'o2', machineId: 'm1', duration: '1' }],
+            dueDate: '10',
+            weight: '3',
           },
         ],
       }),
@@ -123,7 +153,9 @@ describe('serialize', () => {
   it('defaults weight to 1 when a due date has no explicit weight', () => {
     const result = serialize(
       draft({
-        jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 1 }], dueDate: 5 }],
+        jobs: [
+          { id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '1' }], dueDate: '5' },
+        ],
       }),
     )
 
@@ -140,6 +172,43 @@ describe('serialize', () => {
 
     expect(result.constraints?.setup_times).toEqual({ M1: 5 })
     expect(result.constraints?.downtime_windows).toEqual([{ machine_id: 'M1', start: 0, end: 10 }])
+  })
+
+  it('serialize includes a job name when set, and omits it when unset', () => {
+    const draft_input: BuilderDraft = {
+      name: 'Demo',
+      machines: [{ id: 'm1', name: 'M1' }],
+      jobs: [
+        { id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '1' }], name: 'Rush order' },
+        { id: 'j2', operations: [{ id: 'o2', machineId: 'm1', duration: '1' }] },
+      ],
+      setupTimes: {},
+      downtimeWindows: [],
+    }
+    const result = serialize(draft_input)
+    expect(result.jobs[0].name).toBe('Rush order')
+    expect(result.jobs[1].name).toBeUndefined()
+  })
+
+  it('serialize includes an operation name when set, and omits it when unset', () => {
+    const draft_input: BuilderDraft = {
+      name: 'Demo',
+      machines: [{ id: 'm1', name: 'M1' }],
+      jobs: [
+        {
+          id: 'j1',
+          operations: [
+            { id: 'o1', machineId: 'm1', duration: '1', name: 'Grind coffee' },
+            { id: 'o2', machineId: 'm1', duration: '1' },
+          ],
+        },
+      ],
+      setupTimes: {},
+      downtimeWindows: [],
+    }
+    const result = serialize(draft_input)
+    expect(result.jobs[0].operations[0].name).toBe('Grind coffee')
+    expect(result.jobs[0].operations[1].name).toBeUndefined()
   })
 })
 

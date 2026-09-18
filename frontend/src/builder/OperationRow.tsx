@@ -8,7 +8,8 @@ type OperationRowProps = {
   canMoveDown: boolean
   canRemove: boolean
   onChangeMachine: (machineId: string) => void
-  onChangeDuration: (duration: number) => void
+  onChangeDuration: (duration: string) => void
+  onSetName: (name: string) => void
   onMoveUp: () => void
   onMoveDown: () => void
   onRemove: () => void
@@ -23,12 +24,21 @@ export function OperationRow({
   canRemove,
   onChangeMachine,
   onChangeDuration,
+  onSetName,
   onMoveUp,
   onMoveDown,
   onRemove,
 }: OperationRowProps) {
   return (
     <div className="flex items-center gap-2">
+      <input
+        type="text"
+        value={operation.name ?? ''}
+        onChange={(e) => onSetName(e.target.value)}
+        placeholder="Optional name"
+        aria-label="Operation name"
+        className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm"
+      />
       <select
         value={operation.machineId}
         onChange={(e) => onChangeMachine(e.target.value)}
@@ -43,9 +53,10 @@ export function OperationRow({
         ))}
       </select>
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
         value={operation.duration}
-        onChange={(e) => onChangeDuration(Number(e.target.value))}
+        onChange={(e) => onChangeDuration(e.target.value)}
         aria-label="Duration"
         className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm"
       />

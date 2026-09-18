@@ -170,6 +170,8 @@ export interface components {
         Job: {
             /** Operations */
             operations: components["schemas"]["Operation"][];
+            /** Name */
+            name?: string | null;
         };
         /** Operation */
         Operation: {
@@ -177,6 +179,8 @@ export interface components {
             machine_id: string;
             /** Duration */
             duration: number;
+            /** Name */
+            name?: string | null;
         };
         /** ProblemIn */
         ProblemIn: {

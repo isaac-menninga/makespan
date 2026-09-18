@@ -74,16 +74,26 @@ export function validateDraft(draft: BuilderDraft): ValidationResult {
     for (const operation of job.operations) {
       if (!operation.machineId || !machineIds.has(operation.machineId)) {
         operationErrors[operation.id] = 'Select a machine.'
-      } else if (!Number.isFinite(operation.duration) || operation.duration <= 0) {
-        operationErrors[operation.id] = 'Duration must be greater than 0.'
+      } else {
+        const duration = Number(operation.duration)
+        if (!Number.isFinite(duration) || duration <= 0) {
+          operationErrors[operation.id] = 'Duration must be greater than 0.'
+        }
       }
     }
 
     let message: string | undefined
-    if (job.dueDate != null && job.dueDate < 0) {
-      message = 'Due date must be 0 or greater.'
-    } else if (job.weight != null && job.weight < 1) {
-      message = 'Weight must be at least 1.'
+    if (job.dueDate != null) {
+      const dueDate = Number(job.dueDate)
+      if (!Number.isFinite(dueDate) || dueDate < 0) {
+        message = 'Due date must be 0 or greater.'
+      }
+    }
+    if (!message && job.weight != null) {
+      const weight = Number(job.weight)
+      if (!Number.isFinite(weight) || weight < 1) {
+        message = 'Weight must be at least 1.'
+      }
     }
 
     if (message || Object.keys(operationErrors).length > 0) {

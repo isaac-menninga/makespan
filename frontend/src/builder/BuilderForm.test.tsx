@@ -35,7 +35,7 @@ function draftWithTwoMachines(): BuilderDraft {
       { id: 'm1', name: 'M1' },
       { id: 'm2', name: 'M2' },
     ],
-    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 3 }] }],
+    jobs: [{ id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: '3' }] }],
     setupTimes: {},
     downtimeWindows: [],
   }
@@ -79,6 +79,54 @@ describe('BuilderForm', () => {
     expect(screen.getAllByText('Remove Job')).toHaveLength(2)
     await user.click(screen.getAllByText('Remove Job')[1])
     expect(screen.getAllByText('Remove Job')).toHaveLength(1)
+  })
+
+  it('shows a numbered job heading and an editable name field', async () => {
+    const user = userEvent.setup()
+    renderBuilderForm()
+    expect(screen.getByText('Job 1')).toBeInTheDocument()
+
+    await user.click(screen.getByText('+ Add Job'))
+    expect(screen.getByText('Job 1')).toBeInTheDocument()
+    expect(screen.getByText('Job 2')).toBeInTheDocument()
+
+    const nameInputs = screen.getAllByLabelText('Name')
+    await user.type(nameInputs[0], 'Rush order')
+    expect(nameInputs[0]).toHaveValue('Rush order')
+  })
+
+  it('typing a job name and saving carries it through to onSave', async () => {
+    const user = userEvent.setup()
+    const { onSave } = renderBuilderForm({
+      initialDraft: draftWithTwoMachines(),
+      savedDraft: draftWithTwoMachines(),
+    })
+    await user.type(screen.getByLabelText('Name'), 'Rush order')
+    await user.click(screen.getByText('Save'))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobs: [expect.objectContaining({ name: 'Rush order' })],
+      }),
+    )
+  })
+
+  it('shows an editable operation name field, and typing and saving carries it through to onSave', async () => {
+    const user = userEvent.setup()
+    const { onSave } = renderBuilderForm({
+      initialDraft: draftWithTwoMachines(),
+      savedDraft: draftWithTwoMachines(),
+    })
+    await user.type(screen.getByLabelText('Operation name'), 'Grind coffee')
+    await user.click(screen.getByText('Save'))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobs: [
+          expect.objectContaining({
+            operations: [expect.objectContaining({ name: 'Grind coffee' })],
+          }),
+        ],
+      }),
+    )
   })
 
   it('disables Save when the draft is invalid, enables it once fixed', async () => {
