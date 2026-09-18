@@ -221,3 +221,25 @@ def test_create_problem_persists_job_name(client):
     fetched = client.get(f"/api/problems/{created['id']}").json()
     assert fetched["jobs"][0]["name"] == "Rush order"
     assert fetched["jobs"][1]["name"] is None
+
+
+def test_create_problem_persists_operation_name(client):
+    payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [
+            {
+                "operations": [
+                    {"machine_id": "M1", "duration": 3, "name": "Grind coffee"},
+                    {"machine_id": "M1", "duration": 2},
+                ]
+            },
+        ],
+    }
+    created = client.post("/api/problems", json=payload).json()
+    assert created["jobs"][0]["operations"][0]["name"] == "Grind coffee"
+    assert created["jobs"][0]["operations"][1]["name"] is None
+
+    fetched = client.get(f"/api/problems/{created['id']}").json()
+    assert fetched["jobs"][0]["operations"][0]["name"] == "Grind coffee"
+    assert fetched["jobs"][0]["operations"][1]["name"] is None

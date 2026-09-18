@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class Operation(BaseModel):
     machine_id: str
     duration: int = Field(gt=0)
+    name: str | None = None
 
 
 class Job(BaseModel):
