@@ -3,6 +3,7 @@ import type { MachineDraft, JobDraft } from './types'
 
 type JobCardProps = {
   job: JobDraft
+  jobNumber: number
   machines: MachineDraft[]
   error?: { message?: string; operationErrors?: Record<string, string> }
   canRemove: boolean
@@ -13,11 +14,13 @@ type JobCardProps = {
   onChangeOperationDuration: (operationId: string, duration: number) => void
   onSetDueDate: (dueDate: number | undefined) => void
   onSetWeight: (weight: number | undefined) => void
+  onSetName: (name: string) => void
   onRemoveJob: () => void
 }
 
 export function JobCard({
   job,
+  jobNumber,
   machines,
   error,
   canRemove,
@@ -28,12 +31,25 @@ export function JobCard({
   onChangeOperationDuration,
   onSetDueDate,
   onSetWeight,
+  onSetName,
   onRemoveJob,
 }: JobCardProps) {
   return (
     <div className="rounded-lg border border-slate-200 p-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-slate-900">Job</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="font-medium text-slate-900">Job {jobNumber}</h3>
+          <label className="flex items-center gap-1 text-sm">
+            Name
+            <input
+              type="text"
+              value={job.name ?? ''}
+              onChange={(e) => onSetName(e.target.value)}
+              placeholder="Optional"
+              className="w-40 rounded-md border border-slate-300 px-2 py-1"
+            />
+          </label>
+        </div>
         <button
           type="button"
           onClick={onRemoveJob}

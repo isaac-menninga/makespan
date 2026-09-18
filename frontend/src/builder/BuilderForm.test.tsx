@@ -81,6 +81,20 @@ describe('BuilderForm', () => {
     expect(screen.getAllByText('Remove Job')).toHaveLength(1)
   })
 
+  it('shows a numbered job heading and an editable name field', async () => {
+    const user = userEvent.setup()
+    renderBuilderForm()
+    expect(screen.getByText('Job 1')).toBeInTheDocument()
+
+    await user.click(screen.getByText('+ Add Job'))
+    expect(screen.getByText('Job 1')).toBeInTheDocument()
+    expect(screen.getByText('Job 2')).toBeInTheDocument()
+
+    const nameInputs = screen.getAllByLabelText('Name')
+    await user.type(nameInputs[0], 'Rush order')
+    expect(nameInputs[0]).toHaveValue('Rush order')
+  })
+
   it('disables Save when the draft is invalid, enables it once fixed', async () => {
     const user = userEvent.setup()
     renderBuilderForm()
