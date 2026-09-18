@@ -79,6 +79,23 @@ describe('GanttChart', () => {
     )
   })
 
+  it('falls back to "Job N" when a job name is an empty or whitespace-only string', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        jobNames={['', '   ']}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Job 1, operation 2 on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, operation 1 on M2: 0–3',
+    )
+  })
+
   it('clamps the plot width to MIN_PLOT_WIDTH when the container reports zero width (jsdom default)', () => {
     render(<GanttChart schedule={schedule} machines={['M1', 'M2']} />)
 

@@ -120,7 +120,7 @@ export function GanttChart({ schedule, machines, jobNames }: GanttChartProps) {
             height={ROW_HEIGHT - BAR_INSET_Y * 2}
             color={colorForJob(bar.jobIndex)}
             isDimmed={highlightedJob !== null && highlightedJob !== bar.jobIndex}
-            jobLabel={jobNames?.[bar.jobIndex] ?? `Job ${bar.jobIndex + 1}`}
+            jobLabel={jobNames?.[bar.jobIndex]?.trim() || `Job ${bar.jobIndex + 1}`}
             onHover={setHoveredJob}
             onToggle={(jobIndex) => {
               if (pinnedJob === jobIndex) {
