@@ -61,4 +61,21 @@ describe('GanttChart', () => {
       'Job 1, operation 2 on M2: 5–8',
     )
   })
+
+  it('uses a provided job name in the tooltip instead of "Job N"', () => {
+    render(
+      <GanttChart
+        schedule={schedule}
+        machines={['M1', 'M2']}
+        jobNames={['Rush order', undefined]}
+      />,
+    )
+
+    expect(screen.getByTestId('gantt-bar-0-1')).toHaveTextContent(
+      'Rush order, operation 2 on M2: 5–8',
+    )
+    expect(screen.getByTestId('gantt-bar-1-0')).toHaveTextContent(
+      'Job 2, operation 1 on M2: 0–3',
+    )
+  })
 })

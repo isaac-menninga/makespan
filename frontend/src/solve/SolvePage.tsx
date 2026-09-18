@@ -48,6 +48,7 @@ export function SolvePage() {
             <GanttChart
               schedule={(solve.data.schedule ?? []) as ScheduledOperationApi[]}
               machines={problem.data.machines}
+              jobNames={problem.data.jobs.map((job) => job.name ?? undefined)}
             />
           ) : (
             <p className="text-slate-500">Loading chart…</p>
