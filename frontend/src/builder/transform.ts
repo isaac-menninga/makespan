@@ -13,7 +13,7 @@ type ApiProblemIn = components['schemas']['ProblemIn']
 
 type ProblemSpecLike = {
   machines: string[]
-  jobs: { operations: { machine_id: string; duration: number }[] }[]
+  jobs: { operations: { machine_id: string; duration: number }[]; name?: string | null }[]
   constraints?: {
     setup_times?: Record<string, number>
     due_dates?: { job_index: number; due: number; weight: number }[]
@@ -36,6 +36,7 @@ export function hydrateSpec(
         duration: operation.duration,
       }),
     ),
+    name: job.name ?? undefined,
   }))
 
   for (const dueDate of spec.constraints?.due_dates ?? []) {
@@ -97,6 +98,7 @@ export function serialize(draft: BuilderDraft): ApiProblemIn {
         machine_id: machineNameById.get(operation.machineId) ?? operation.machineId,
         duration: operation.duration,
       })),
+      name: job.name,
     })),
     constraints: {
       setup_times: setupTimes,

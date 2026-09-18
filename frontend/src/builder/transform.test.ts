@@ -68,6 +68,14 @@ describe('hydrateSpec', () => {
     expect(draft.jobs[0].operations[0].machineId).toBe('M2')
     expect(draft.setupTimes).toEqual({ M2: 5 })
   })
+
+  it('hydrateSpec carries a job name through', () => {
+    const draft = hydrateSpec({
+      machines: ['M1'],
+      jobs: [{ operations: [{ machine_id: 'M1', duration: 1 }], name: 'Rush order' }],
+    })
+    expect(draft.jobs[0].name).toBe('Rush order')
+  })
 })
 
 describe('hydrate', () => {
@@ -140,6 +148,22 @@ describe('serialize', () => {
 
     expect(result.constraints?.setup_times).toEqual({ M1: 5 })
     expect(result.constraints?.downtime_windows).toEqual([{ machine_id: 'M1', start: 0, end: 10 }])
+  })
+
+  it('serialize includes a job name when set, and omits it when unset', () => {
+    const draft_input: BuilderDraft = {
+      name: 'Demo',
+      machines: [{ id: 'm1', name: 'M1' }],
+      jobs: [
+        { id: 'j1', operations: [{ id: 'o1', machineId: 'm1', duration: 1 }], name: 'Rush order' },
+        { id: 'j2', operations: [{ id: 'o2', machineId: 'm1', duration: 1 }] },
+      ],
+      setupTimes: {},
+      downtimeWindows: [],
+    }
+    const result = serialize(draft_input)
+    expect(result.jobs[0].name).toBe('Rush order')
+    expect(result.jobs[1].name).toBeUndefined()
   })
 })
 
