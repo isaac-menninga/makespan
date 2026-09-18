@@ -151,6 +151,14 @@ describe('builderReducer', () => {
     expect(draft.jobs[0].weight).toBeUndefined()
   })
 
+  it('setJobName sets the name, and an empty string clears it back to undefined', () => {
+    let draft = builderReducer(baseDraft(), { type: 'setJobName', jobId: 'j1', name: 'Rush order' })
+    expect(draft.jobs[0].name).toBe('Rush order')
+
+    draft = builderReducer(draft, { type: 'setJobName', jobId: 'j1', name: '' })
+    expect(draft.jobs[0].name).toBeUndefined()
+  })
+
   it('never mutates the input draft', () => {
     const draft = baseDraft()
     const result = builderReducer(draft, { type: 'setName', name: 'Renamed' })

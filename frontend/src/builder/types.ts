@@ -13,6 +13,7 @@ export type JobDraft = {
   operations: OperationDraft[]
   dueDate?: number
   weight?: number
+  name?: string
 }
 
 export type MachineDraft = {

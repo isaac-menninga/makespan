@@ -22,6 +22,7 @@ export type BuilderAction =
     }
   | { type: 'setJobDueDate'; jobId: string; dueDate: number | undefined }
   | { type: 'setJobWeight'; jobId: string; weight: number | undefined }
+  | { type: 'setJobName'; jobId: string; name: string }
 
 export function newOperation(machineId: string): OperationDraft {
   return { id: generateId(), machineId, duration: 1 }
@@ -107,6 +108,11 @@ export const builderReducer = produce((draft: BuilderDraft, action: BuilderActio
     case 'setJobWeight': {
       const job = draft.jobs.find((j) => j.id === action.jobId)
       if (job) job.weight = action.weight
+      break
+    }
+    case 'setJobName': {
+      const job = draft.jobs.find((j) => j.id === action.jobId)
+      if (job) job.name = action.name === '' ? undefined : action.name
       break
     }
     default: {
