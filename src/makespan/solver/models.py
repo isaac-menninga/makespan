@@ -10,6 +10,7 @@ class Operation(BaseModel):
 
 class Job(BaseModel):
     operations: list[Operation] = Field(min_length=1)
+    name: str | None = None
 
 
 class DueDate(BaseModel):

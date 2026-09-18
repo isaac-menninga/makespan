@@ -203,3 +203,21 @@ def test_list_problems_includes_machine_and_job_counts(client):
     entry = next(p for p in response.json() if p["name"] == "Counts")
     assert entry["machine_count"] == 2
     assert entry["job_count"] == 2
+
+
+def test_create_problem_persists_job_name(client):
+    payload = {
+        "name": "Demo",
+        "machines": ["M1"],
+        "jobs": [
+            {"operations": [{"machine_id": "M1", "duration": 3}], "name": "Rush order"},
+            {"operations": [{"machine_id": "M1", "duration": 2}]},
+        ],
+    }
+    created = client.post("/api/problems", json=payload).json()
+    assert created["jobs"][0]["name"] == "Rush order"
+    assert created["jobs"][1]["name"] is None
+
+    fetched = client.get(f"/api/problems/{created['id']}").json()
+    assert fetched["jobs"][0]["name"] == "Rush order"
+    assert fetched["jobs"][1]["name"] is None
