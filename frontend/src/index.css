@@ -2,4 +2,5 @@
 
 @theme {
   --color-accent: #4f46e5;
+  --content-max-width: 1600px;
 }
